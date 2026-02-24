@@ -204,3 +204,96 @@ class MonotonicNN(nn.Module):
             w = self.out.weight[:, start:end]
             w.clamp_(min=0.0)
             self.out.weight[:, start:end] = w
+
+    def fit(
+        self,
+        x_tr: torch.Tensor,
+        y_tr: torch.Tensor,
+        epochs: int = 5,
+        batch_size: int = 1024,
+        lr: float = 1e-3,
+        optimizer_cls: torch.optim.Optimizer = torch.optim.RMSprop,  # or torch.optim.Adam
+        shuffle: bool = True,
+        num_workers: int = 0,
+        device: str | torch.device = "cpu",   # "cuda" if available
+        verbose: bool = True,
+    ) -> dict[str, list[float]]:
+        """
+        Train the model using a simple minibatch loop with monotonic projection after each step.
+
+        Parameters
+        ----------
+        epochs : int
+            Number of epochs.
+        batch_size : int
+            Minibatch size.
+        lr : float
+            Learning rate.
+        optimizer_cls : torch.optim.Optimizer
+            Optimizer class to instantiate (e.g., RMSprop, Adam).
+        device : str | torch.device
+            Device to train on.
+        verbose : bool
+            Print epoch loss.
+
+        Returns
+        -------
+        dict
+            Training history with avg loss per epoch.
+        """
+        self.to(device)
+        self.train()
+
+        dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
+        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+
+        # ---- Optimizer
+        optimizer = optimizer_cls(self.parameters(), lr=lr)
+
+        # ---- Initial projection (recommended with projection approach)
+        # If you switch to reparameterization, REMOVE this call.
+        self.monotonic_constraint()
+
+        history: dict[str, list[float]] = {"epoch_loss": []}
+
+        for epoch in range(epochs):
+            running_loss, n_batches = 0.0, 0
+
+            for xb, yb in loader:
+                xb = xb.to(device).float()
+                yb = yb.to(device).float().view(-1, 1)
+
+                optimizer.zero_grad()
+
+                p = self(xb)  # probabilities [B,1] (your forward applies sigmoid)
+
+                loss = torch.mean((p - yb)**2)               # simple MSE; replace with weighted MSE if needed
+                # weighted_mse_loss = torch.div(torch.sum(rebalance_weights*((p - yb) ** 2)), torch.sum(rebalance_weights))
+
+                loss.backward()
+                optimizer.step()
+
+                # ---- Projection step (only for clamp-based constraints)
+                # If you switch to reparameterization, REMOVE this call.
+                self.monotonic_constraint()
+
+                running_loss += loss.item()
+                n_batches += 1
+
+            avg_loss = running_loss / max(n_batches, 1)
+            history["epoch_loss"].append(avg_loss)
+            if verbose:
+                print(f"Epoch {epoch+1}/{epochs} - loss: {avg_loss:.6f}")
+
+        return history
+
+    # @torch.no_grad()
+    # def predict_proba(self, x):
+    #     """Return probabilities for a torch tensor or numpy array."""
+    #     self.eval()
+    #     if isinstance(x, np.ndarray):
+    #         x = torch.from_numpy(x).float()
+    #     x = x.to(next(self.parameters()).device)
+    #     p = self(x)
+    #     self.train()
+    #     return p.detach().cpu().numpy()
