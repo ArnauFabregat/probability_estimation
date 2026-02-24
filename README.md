@@ -24,8 +24,8 @@ Tech stack:
 TBD
 
 ## Data Sources
-The project uses this toy dataset from Kaggle:
-- Customer churn dataset: https://www.kaggle.com/datasets/muhammadshahidazeem/customer-churn-dataset
+The project uses this toy dataset:
+- Customer churn dataset: https://mavenanalytics.io/data-playground/bank-customer-churn
 
 ## Code Quality & Documentation
 ### Pre-commit Hooks
@@ -123,4 +123,5 @@ Open a terminal in VSCode and execute the following command:
 * `uv sync`
 
 ## TODO
-- ...
+- why torch and not tensorflow?
+- why RMSprop and not ADAM?
