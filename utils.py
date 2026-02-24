@@ -84,6 +84,7 @@ class MonotonicNN(nn.Module):
                          if self.negative_monotonic_vars else None)
 
         # Define hidden-layer branches (Linear layer only; tanh applied in forward)
+        # Can add more layers if desired, but need to enforce constraints on all layers for monotonic branches
         self.lin_non = (nn.Linear(len(self.non_monotonic_vars), hidden_non)
                         if self.non_monotonic_vars and hidden_non > 0 else None)
         self.lin_pos = (nn.Linear(len(self.positive_monotonic_vars), hidden_pos)
@@ -100,6 +101,7 @@ class MonotonicNN(nn.Module):
             raise ValueError("At least one branch must have > 0 hidden units.")
 
         # Final output layer: maps concatenated hidden units → 1 logit
+        # logit = w₁*h₁ + w₂*h₂ + ... + b
         self.out = nn.Linear(total_h, 1)
 
         # Initialize weights (Xavier uniform)
@@ -138,15 +140,15 @@ class MonotonicNN(nn.Module):
 
         # Apply each branch if present
         if self.lin_non is not None:
-            h_non = torch.tanh(self.lin_non(x.index_select(1, self.mask_non.to(x.device))))
+            h_non = torch.tanh(self.lin_non(x.index_select(1, self.mask_non.to(x.device))))  # type: ignore
             branches.append(h_non)
 
         if self.lin_pos is not None:
-            h_pos = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos.to(x.device))))
+            h_pos = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos.to(x.device))))  # type: ignore
             branches.append(h_pos)
 
         if self.lin_neg is not None:
-            h_neg = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg.to(x.device))))
+            h_neg = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg.to(x.device))))  # type: ignore
             branches.append(h_neg)
 
         # Concatenate hidden representations (or use single branch)
