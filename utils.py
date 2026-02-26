@@ -70,9 +70,6 @@ class MonotonicLinear(nn.Module):
         # Bias is unconstrained
         self.bias = nn.Parameter(torch.zeros(out_features))
 
-        # Xavier initialization of raw_weight is generally a good start
-        nn.init.xavier_uniform_(self.raw_weight)
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Apply monotonic linear transformation to input.
@@ -206,10 +203,24 @@ class MonotonicNN(nn.Module):
         self._init_weights()
 
     def _init_weights(self) -> None:
-        """Apply Xavier initialization to all Linear layers."""
+        """
+        Apply Xavier initialization to all Linear layers, including
+        custom MonotonicLinear layers by initializing their raw weights.
+
+        - nn.Linear → initialize .weight and .bias
+        - MonotonicLinear → initialize .raw_weight and .bias
+        """
         for m in self.modules():
+
+            # Standard Linear layers
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+            # Custom monotonic layers
+            if isinstance(m, MonotonicLinear):
+                nn.init.xavier_uniform_(m.raw_weight)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
 
@@ -310,7 +321,7 @@ class MonotonicNN(nn.Module):
         epochs: int = 5,
         batch_size: int = 1024,
         lr: float = 1e-3,
-        optimizer_cls: torch.optim.Optimizer = torch.optim.RMSprop,  # type: ignore
+        optimizer_cls: torch.optim.Optimizer = torch.optim.Adam,  # type: ignore
         shuffle: bool = True,
         num_workers: int = 0,
         device: str | torch.device = "cpu",   # "cuda" if available
@@ -344,7 +355,7 @@ class MonotonicNN(nn.Module):
         dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
 
-        # ---- Optimizer: RMSprop or Adam (you can experiment with both)
+        # ---- Optimizer: consider momentum or other params for ADAM
         optimizer = optimizer_cls(self.parameters(), lr=lr)  # type: ignore
 
         # ---- Initial projection (recommended with projection approach)
