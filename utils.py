@@ -1,9 +1,6 @@
 import numpy
 import torch
 import torch.nn as nn
-
-
-# TODO replace monotonic_constraints by reparametrization
 import torch.nn.functional as F
 
 
@@ -182,22 +179,27 @@ class MonotonicNN(nn.Module):
         # Can add more layers if desired, but need to enforce constraints on all layers for monotonic branches
         self.lin_non = (nn.Linear(len(self.non_monotonic_vars), hidden_non)
                         if self.non_monotonic_vars and hidden_non > 0 else None)
-        self.lin_pos = (nn.Linear(len(self.positive_monotonic_vars), hidden_pos)
-                        if self.positive_monotonic_vars and hidden_pos > 0 else None)
-        self.lin_neg = (nn.Linear(len(self.negative_monotonic_vars), hidden_neg)
-                        if self.negative_monotonic_vars and hidden_neg > 0 else None)
+        self.lin_pos = (
+            MonotonicLinear(
+                in_features=len(positive_monotonic_vars),
+                out_features=hidden_pos,
+                sign="+",
+            )
+            if self.positive_monotonic_vars and hidden_pos > 0 else None
+        )
+        self.lin_neg = (
+            MonotonicLinear(
+                in_features=len(negative_monotonic_vars),
+                out_features=hidden_neg,
+                sign="-",
+            )
+            if self.negative_monotonic_vars and hidden_neg > 0 else None
+        )
 
-        # Determine total hidden dimension
-        total_h = ((self.lin_non.out_features if self.lin_non else 0) +
-                   (self.lin_pos.out_features if self.lin_pos else 0) +
-                   (self.lin_neg.out_features if self.lin_neg else 0))
-
-        if total_h == 0:
-            raise ValueError("At least one branch must have > 0 hidden units.")
-
-        # Final output layer: maps concatenated hidden units → 1 logit
-        # logit = w₁*h₁ + w₂*h₂ + ... + b
-        self.out = nn.Linear(total_h, 1)
+        # Output layers – SUM of three logits
+        self.out_non = nn.Linear(hidden_non, 1) if self.lin_non else None
+        self.out_pos = MonotonicLinear(hidden_pos, 1, sign="+") if self.lin_pos else None
+        self.out_neg = MonotonicLinear(hidden_neg, 1, sign="+") if self.lin_neg else None
 
         # Initialize weights (Xavier uniform)
         self._init_weights()
@@ -226,93 +228,64 @@ class MonotonicNN(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
+        Compute the forward pass of the monotonic neural network.
+
         Steps:
-            1. Takes the input and splits the features into monotonicity groups.
-            2. Sends each group into its corresponding branch neural network.
-            3. Applies a Linear layer + tanh on each branch.
-            4. Concatenates all branch outputs.
-            5. Sends them into a final linear layer to compute a logit.
-            6. Applies sigmoid to return a probability.
+        ------
+        1. Split the input tensor into subsets of features according to their
+        monotonicity groups:
+            - non‑monotonic variables
+            - positively monotonic variables
+            - negatively monotonic variables
+
+        2. Each subset is passed through its corresponding branch:
+            - Non‑monotonic branch:      Linear → tanh
+            - Positive‑monotonic branch: MonotonicLinear(sign="+") → tanh
+            - Negative‑monotonic branch: MonotonicLinear(sign="-") → tanh
+
+        3. Each branch produces a hidden representation, which is fed into its
+        own output layer:
+            - out_non: standard Linear
+            - out_pos: MonotonicLinear(sign="+")
+            - out_neg: MonotonicLinear(sign="+")
+        (Positive sign is correct for both monotonic branches because the
+        hidden-layer sign determines the derivative direction.)
+
+        4. The three output logits are **summed**, not concatenated, preserving
+        monotonicity and avoiding interaction terms that could break it.
+
+        5. A final sigmoid is applied to convert the summed logit into a
+        probability in [0, 1].
 
         Parameters
         ----------
         x : torch.Tensor
-            Input tensor of shape [batch_size, num_variables],
-            columns in the same order as `self.all_variables`.
+            Input tensor of shape [batch_size, num_variables], where the columns
+            appear in the same order as `self.all_variables`.
 
         Returns
         -------
         torch.Tensor
-            Probability in [0, 1] of shape [batch_size, 1].
+            Tensor of shape [batch_size, 1] containing the predicted probability
+            for each input sample.
         """
-        branches = []
 
         # Apply each branch if present
-        if self.lin_non is not None:
-            h_non = torch.tanh(self.lin_non(x.index_select(1, self.mask_non.to(x.device))))  # type: ignore
-            branches.append(h_non)
+        total_logit: float = 0.0
 
-        if self.lin_pos is not None:
-            h_pos = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos.to(x.device))))  # type: ignore
-            branches.append(h_pos)
+        if self.lin_non:
+            h = torch.tanh(self.lin_non(x.index_select(1, self.mask_non.to(x.device))))  # type: ignore
+            total_logit += self.out_non(h)  # type: ignore
 
-        if self.lin_neg is not None:
-            h_neg = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg.to(x.device))))  # type: ignore
-            branches.append(h_neg)
+        if self.lin_pos:
+            h = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos.to(x.device))))  # type: ignore
+            total_logit += self.out_pos(h)  # type: ignore
 
-        # Concatenate hidden representations (or use single branch)
-        h = branches[0] if len(branches) == 1 else torch.cat(branches, dim=1)
+        if self.lin_neg:
+            h = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg.to(x.device))))  # type: ignore
+            total_logit += self.out_neg(h)  # type: ignore
 
-        logits = self.out(h)
-        probs = torch.sigmoid(logits)
-        return probs
-
-    @torch.no_grad()
-    def monotonic_constraint(self) -> None:
-        """
-        Enforce monotonicity constraints by projecting parameters back into
-        the feasible region. Should be called after each optimizer step.
-
-        Constraints:
-        ------------
-        - Positive branch:
-            * First-layer weights: >= 0
-            * Output weights from this section: >= 0
-
-        - Negative branch:
-            * First-layer weights: <= 0
-            * Output weights from this section: >= 0
-
-        Biases are left unconstrained (bias does not affect derivative sign).
-        """
-        # Constrain first-layer weights
-        if self.lin_pos is not None:
-            self.lin_pos.weight.clamp_(min=0.0)
-
-        if self.lin_neg is not None:
-            self.lin_neg.weight.clamp_(max=0.0)
-
-        # Constrain output-layer weights for monotonic sections
-        start = 0
-
-        # Skip non-monotonic part
-        if self.lin_non is not None:
-            start += self.lin_non.out_features
-
-        # Positive monotonic section — enforce weights >= 0
-        if self.lin_pos is not None:
-            end = start + self.lin_pos.out_features
-            w = self.out.weight[:, start:end]
-            w.clamp_(min=0.0)
-            self.out.weight[:, start:end] = w
-            start = end
-
-        # Negative monotonic section — enforce weights >= 0
-        if self.lin_neg is not None:
-            end = start + self.lin_neg.out_features
-            w = self.out.weight[:, start:end]
-            w.clamp_(min=0.0)
-            self.out.weight[:, start:end] = w
+        return torch.sigmoid(total_logit)  # type: ignore
 
     def fit(
         self,
@@ -358,10 +331,6 @@ class MonotonicNN(nn.Module):
         # ---- Optimizer: consider momentum or other params for ADAM
         optimizer = optimizer_cls(self.parameters(), lr=lr)  # type: ignore
 
-        # ---- Initial projection (recommended with projection approach)
-        # If you switch to reparameterization, REMOVE this call.
-        self.monotonic_constraint()
-
         history: dict[str, list[float]] = {"epoch_loss": []}
 
         for epoch in range(epochs):
@@ -381,10 +350,6 @@ class MonotonicNN(nn.Module):
 
                 loss.backward()  # type: ignore
                 optimizer.step()
-
-                # ---- Projection step (only for clamp-based constraints)
-                # If you switch to reparameterization, REMOVE this call.
-                self.monotonic_constraint()
 
                 running_loss += loss.item()
                 n_batches += 1
