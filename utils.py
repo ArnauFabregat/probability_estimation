@@ -1,7 +1,105 @@
+import numpy
 import torch
 import torch.nn as nn
 
 
+# TODO replace monotonic_constraints by reparametrization
+import torch.nn.functional as F
+
+
+class MonotonicLinear(nn.Module):
+    """
+    A Linear layer with **built-in monotonicity constraints** applied through
+    softplus-based weight reparameterization.
+
+    This layer guarantees that the sign of the partial derivative with respect to
+    each input dimension remains fixed, which is essential for monotonic neural
+    networks.
+
+    Parameters
+    ----------
+    in_features : int
+        Number of input features.
+    out_features : int
+        Number of output features.
+    sign : str, optional (default="+")
+        Monotonicity direction:
+            "+" enforces positive monotonicity (∂y/∂x >= 0)
+            "-" enforces negative monotonicity (∂y/∂x <= 0)
+
+    Forward Input
+    -------------
+    x : torch.Tensor
+        Input tensor of shape [batch_size, in_features].
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape [batch_size, out_features].
+
+    Notes
+    -----
+    - softplus ensures smoothness and better gradient behavior than exp().
+    - bias is unconstrained because it does not affect monotonicity.
+    - For **positive monotonicity** w.r.t. the inputs:
+        MonotonicLinear(..., sign="+")
+        weight =  softplus(raw_weight)
+    - For **negative monotonicity** w.r.t. the inputs:
+        MonotonicLinear(..., sign="-")
+        weight = -softplus(raw_weight)
+    """
+
+    def __init__(self,
+                 in_features: int,
+                 out_features: int,
+                 sign: str = "+") -> None:
+        super().__init__()
+
+        if sign not in {"+", "-"}:
+            raise ValueError("sign must be '+' or '-'.")
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.sign = sign
+
+        # Unconstrained raw weight; transformed via softplus in forward()
+        self.raw_weight = nn.Parameter(
+            torch.empty(out_features, in_features)
+        )
+
+        # Bias is unconstrained
+        self.bias = nn.Parameter(torch.zeros(out_features))
+
+        # Xavier initialization of raw_weight is generally a good start
+        nn.init.xavier_uniform_(self.raw_weight)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply monotonic linear transformation to input.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Shape [batch_size, in_features]
+
+        Returns
+        -------
+        torch.Tensor:
+            Shape [batch_size, out_features].
+        """
+
+        # softplus ensures strictly positive weights
+        weight = F.softplus(self.raw_weight)
+
+        # enforce monotonic direction
+        if self.sign == "-":
+            weight = -weight
+
+        # Linear transformation: y = xW^T + b
+        return x @ weight.T + self.bias
+
+
+# TODO explore torch.nn.BCEWithLogitsLoss(weight=rebalance_weights) instead of weighted MSE
 class MonotonicNN(nn.Module):
     """
     Monotonic Neural Network with three optional branches enforcing different
@@ -212,7 +310,7 @@ class MonotonicNN(nn.Module):
         epochs: int = 5,
         batch_size: int = 1024,
         lr: float = 1e-3,
-        optimizer_cls: torch.optim.Optimizer = torch.optim.RMSprop,  # or torch.optim.Adam
+        optimizer_cls: torch.optim.Optimizer = torch.optim.RMSprop,  # type: ignore
         shuffle: bool = True,
         num_workers: int = 0,
         device: str | torch.device = "cpu",   # "cuda" if available
@@ -242,13 +340,12 @@ class MonotonicNN(nn.Module):
             Training history with avg loss per epoch.
         """
         self.to(device)
-        self.train()
 
         dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
 
-        # ---- Optimizer
-        optimizer = optimizer_cls(self.parameters(), lr=lr)
+        # ---- Optimizer: RMSprop or Adam (you can experiment with both)
+        optimizer = optimizer_cls(self.parameters(), lr=lr)  # type: ignore
 
         # ---- Initial projection (recommended with projection approach)
         # If you switch to reparameterization, REMOVE this call.
@@ -265,12 +362,13 @@ class MonotonicNN(nn.Module):
 
                 optimizer.zero_grad()
 
-                p = self(xb)  # probabilities [B,1] (your forward applies sigmoid)
+                p = self.forward(xb)  # probabilities [B,1] (your forward applies sigmoid)
 
                 loss = torch.mean((p - yb)**2)               # simple MSE; replace with weighted MSE if needed
-                # weighted_mse_loss = torch.div(torch.sum(rebalance_weights*((p - yb) ** 2)), torch.sum(rebalance_weights))
+                # rebalance_weights <- compute_weights for yb based on model_rebalance
+                # weighted_mse_loss = torch.div(torch.sum(rebalance_weights*((p-yb)**2)), torch.sum(rebalance_weights))
 
-                loss.backward()
+                loss.backward()  # type: ignore
                 optimizer.step()
 
                 # ---- Projection step (only for clamp-based constraints)
@@ -287,13 +385,24 @@ class MonotonicNN(nn.Module):
 
         return history
 
-    # @torch.no_grad()
-    # def predict_proba(self, x):
-    #     """Return probabilities for a torch tensor or numpy array."""
-    #     self.eval()
-    #     if isinstance(x, np.ndarray):
-    #         x = torch.from_numpy(x).float()
-    #     x = x.to(next(self.parameters()).device)
-    #     p = self(x)
-    #     self.train()
-    #     return p.detach().cpu().numpy()
+    @torch.no_grad()
+    def predict_proba(self, x: numpy.ndarray) -> numpy.ndarray:
+        """
+        Eval the model and transform its output to obtain the statistical probability of belonging to the minority
+        class for each sample.
+
+        Parameters
+        ----------
+        x : numpy.ndarray)
+            The input matrix NxM containing M dimensions for N sampels.
+
+        Returns
+        -------
+        numpy.ndarray
+            The probability of belonging to the minority class for each sample evaluated.
+        """
+
+        x_input = torch.from_numpy(x).float()
+        output = self.forward(x=x_input).detach().numpy()
+
+        return output
