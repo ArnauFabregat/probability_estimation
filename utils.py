@@ -304,21 +304,21 @@ class MonotonicNN(nn.Module):
         """
 
         # Apply each branch if present
-        total_logit: float = 0.0
+        total_logit = torch.zeros((x.shape[0], 1), device=x.device)
 
         if self.lin_non:
-            h = torch.tanh(self.lin_non(x.index_select(1, self.mask_non)))  # type: ignore
+            h = torch.tanh(self.lin_non(x[:, self.mask_non]))
             total_logit += self.out_non(h)  # type: ignore
 
         if self.lin_pos:
-            h = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos)))  # type: ignore
+            h = torch.tanh(self.lin_pos(x[:, self.mask_pos]))
             total_logit += self.out_pos(h)  # type: ignore
 
         if self.lin_neg:
-            h = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg)))  # type: ignore
+            h = torch.tanh(self.lin_neg(x[:, self.mask_neg]))
             total_logit += self.out_neg(h)  # type: ignore
 
-        return torch.sigmoid(total_logit)  # type: ignore
+        return total_logit
 
     def fit(
         self,
@@ -326,6 +326,7 @@ class MonotonicNN(nn.Module):
         y_tr: torch.Tensor,
         x_val: Optional[torch.Tensor] = None,
         y_val: Optional[torch.Tensor] = None,
+        pos_weight: float = 1.0,
         epochs: int = 5,
         optimizer_params: OptimizerParams = OptimizerParams(),
         shuffle: bool = True,
@@ -381,6 +382,11 @@ class MonotonicNN(nn.Module):
         epochs_no_improve: int = 0
         best_model_state = None
 
+        # Use BCEWithLogitsLoss which combines a sigmoid layer and the BCELoss in one single class.
+        criterion = nn.BCEWithLogitsLoss(
+            pos_weight=torch.tensor([pos_weight], device=device)
+        )
+
         for epoch in range(epochs):
             # --- Training Phase ---
             self.train()
@@ -391,13 +397,10 @@ class MonotonicNN(nn.Module):
                 yb = yb.to(device).float().view(-1, 1)
                 optimizer.zero_grad()
 
-                # probabilities [B,1] (applies sigmoid)
-                p = self.forward(xb)
-                loss = torch.mean((p - yb)**2)               # simple MSE; replace with weighted MSE if needed
-                # rebalance_weights <- compute_weights for yb based on model_rebalance
-                # weighted_mse_loss = torch.div(torch.sum(rebalance_weights*((p-yb)**2)), torch.sum(rebalance_weights))
+                logits = self.forward(xb)
+                loss = criterion(logits, yb)
 
-                loss.backward()  # type: ignore
+                loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
                 pbar.set_postfix({"loss": f"{loss.item():.4f}"})
@@ -411,13 +414,13 @@ class MonotonicNN(nn.Module):
                 with torch.no_grad():
                     x_v = x_val.to(device).float()
                     y_v = y_val.to(device).float().view(-1, 1)
-                    p_val = self.forward(x_v)
-                    avg_val_loss = torch.mean((p_val - y_v)**2).item()
-                    history["val_loss"].append(avg_val_loss)
+                    logits_val = self.forward(x_v)
+                    val_loss = criterion(logits_val, y_v)
+                    history["val_loss"].append(val_loss.item())
 
                 # Check Early Stopping
-                if avg_val_loss < (best_val_loss - optimizer_params.min_delta):
-                    best_val_loss = avg_val_loss
+                if val_loss < (best_val_loss - optimizer_params.min_delta):
+                    best_val_loss = val_loss
                     epochs_no_improve = 0
                     # Deep copy the state so we can restore the best version later
                     best_model_state = copy.deepcopy(self.state_dict())
@@ -425,7 +428,7 @@ class MonotonicNN(nn.Module):
                     epochs_no_improve += 1
 
                 if verbose:
-                    print(f"Epoch {epoch+1} | Train: {avg_train_loss:.5f} | Val: {avg_val_loss:.5f}")
+                    print(f"Epoch {epoch+1} | Train: {avg_train_loss:.5f} | Val: {val_loss.item():.5f}")
 
                 if epochs_no_improve >= optimizer_params.patience:
                     if verbose:
@@ -459,6 +462,6 @@ class MonotonicNN(nn.Module):
         device = next(self.parameters()).device
 
         x_input = torch.from_numpy(x).float().to(device)
-        output = self.forward(x_input).cpu().numpy()
-
-        return output
+        logits = self.forward(x_input)
+        probs = torch.sigmoid(logits).cpu().numpy()
+        return probs

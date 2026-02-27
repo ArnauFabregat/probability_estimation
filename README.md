@@ -125,3 +125,6 @@ Open a terminal in VSCode and execute the following command:
 ## TODO
 - Switch from MSE to BCEWithLogitsLoss. Replace manual sigmoid + MSE with logits‑based loss. Remove final sigmoid in forward().
 - Refactor branch summation into a dedicated method. Makes debugging easier.
+- Add normalization before the data enters the NN
+- Add probability calibration after the data exits the NN
+- Add classification metrics after the data exits the NN
