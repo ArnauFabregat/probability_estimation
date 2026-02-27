@@ -1,7 +1,19 @@
+from typing import Optional
+import copy
 import numpy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
+from pydantic import BaseModel, Field, PositiveInt, PositiveFloat
+
+
+class OptimizerParams(BaseModel):
+    lr: PositiveFloat = 1e-3
+    weight_decay: float = Field(default=1e-4, ge=0)
+    batch_size: PositiveInt = 1024
+    patience: PositiveInt = 10
+    min_delta: float = 1e-4  # Minimum change to qualify as improvement
 
 
 class MonotonicLinear(nn.Module):
@@ -93,7 +105,6 @@ class MonotonicLinear(nn.Module):
         return x @ weight.T + self.bias
 
 
-# TODO explore torch.nn.BCEWithLogitsLoss(weight=rebalance_weights) instead of weighted MSE
 class MonotonicNN(nn.Module):
     """
     Monotonic Neural Network with three optional branches enforcing different
@@ -291,10 +302,10 @@ class MonotonicNN(nn.Module):
         self,
         x_tr: torch.Tensor,
         y_tr: torch.Tensor,
+        x_val: Optional[torch.Tensor] = None,
+        y_val: Optional[torch.Tensor] = None,
         epochs: int = 5,
-        batch_size: int = 1024,
-        lr: float = 1e-3,
-        optimizer_cls: torch.optim.Optimizer = torch.optim.Adam,  # type: ignore
+        optimizer_params: OptimizerParams = OptimizerParams(),
         shuffle: bool = True,
         num_workers: int = 0,
         device: str | torch.device = "cpu",   # "cuda" if available
@@ -326,38 +337,83 @@ class MonotonicNN(nn.Module):
         self.to(device)
 
         dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
-        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+        loader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=optimizer_params.batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers
+        )
 
-        # ---- Optimizer: consider momentum or other params for ADAM
-        optimizer = optimizer_cls(self.parameters(), lr=lr)  # type: ignore
+        # Optimizer
+        optimizer = torch.optim.Adam(
+            self.parameters(),
+            lr=optimizer_params.lr,
+            weight_decay=optimizer_params.weight_decay
+        )
 
-        history: dict[str, list[float]] = {"epoch_loss": []}
+        # Initialize history dictionary
+        history: dict[str, list[float]] = {"train_loss": [], "val_loss": []}
+
+        # Early Stopping Variables
+        best_val_loss: float = float('inf')
+        epochs_no_improve: int = 0
+        best_model_state = None
 
         for epoch in range(epochs):
-            running_loss, n_batches = 0.0, 0
-
+            # --- Training Phase ---
+            self.train()
+            running_loss: float = 0.0
+            pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", unit="batch")
             for xb, yb in loader:
                 xb = xb.to(device).float()
                 yb = yb.to(device).float().view(-1, 1)
-
                 optimizer.zero_grad()
 
-                p = self.forward(xb)  # probabilities [B,1] (your forward applies sigmoid)
-
+                # probabilities [B,1] (applies sigmoid)
+                p = self.forward(xb)
                 loss = torch.mean((p - yb)**2)               # simple MSE; replace with weighted MSE if needed
                 # rebalance_weights <- compute_weights for yb based on model_rebalance
                 # weighted_mse_loss = torch.div(torch.sum(rebalance_weights*((p-yb)**2)), torch.sum(rebalance_weights))
 
                 loss.backward()  # type: ignore
                 optimizer.step()
-
                 running_loss += loss.item()
-                n_batches += 1
+                pbar.set_postfix({"loss": f"{loss.item():.4f}"})
 
-            avg_loss = running_loss / max(n_batches, 1)
-            history["epoch_loss"].append(avg_loss)
-            if verbose:
-                print(f"Epoch {epoch+1}/{epochs} - loss: {avg_loss:.6f}")
+            avg_train_loss = running_loss / len(loader)
+            history["train_loss"].append(avg_train_loss)
+
+            # --- Validation Phase ---
+            if x_val is not None and y_val is not None:
+                self.eval()
+                with torch.no_grad():
+                    x_v = x_val.to(device).float()
+                    y_v = y_val.to(device).float().view(-1, 1)
+                    p_val = self.forward(x_v)
+                    avg_val_loss = torch.mean((p_val - y_v)**2).item()
+                    history["val_loss"].append(avg_val_loss)
+
+                # Check Early Stopping
+                if avg_val_loss < (best_val_loss - optimizer_params.min_delta):
+                    best_val_loss = avg_val_loss
+                    epochs_no_improve = 0
+                    # Deep copy the state so we can restore the best version later
+                    best_model_state = copy.deepcopy(self.state_dict())
+                else:
+                    epochs_no_improve += 1
+
+                if verbose:
+                    print(f"Epoch {epoch+1} | Train: {avg_train_loss:.5f} | Val: {avg_val_loss:.5f}")
+
+                if epochs_no_improve >= optimizer_params.patience:
+                    if verbose:
+                        print(f"Early stopping triggered at epoch {epoch+1}")
+                    # Restore the best weights before exiting
+                    self.load_state_dict(best_model_state)  # type: ignore
+                    break
+            else:
+                if verbose:
+                    print(f"Epoch {epoch+1} | Train loss: {avg_train_loss:.5f}")
 
         return history
 

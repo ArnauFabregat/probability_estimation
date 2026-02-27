@@ -6,7 +6,9 @@ readme = "README.md"
 requires-python = "==3.13.12"
 dependencies = [
     "pandas>=3.0.0",
+    "pydantic>=2.12.5",
     "torch>=2.10.0",
+    "tqdm>=4.67.3",
 ]
 
 [dependency-groups]
