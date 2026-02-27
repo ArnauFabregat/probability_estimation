@@ -165,3 +165,77 @@ def ice_pdp_plot(
         "pdp": pdp,
         "sample_idx": sample_idx
     }
+
+
+def ice_pdp_plot_xgb(
+    model,
+    X,                # raw input data (no standardization)
+    feature_name,
+    all_vars,
+    n_samples=None,
+    num_points=50,
+    mode="both",
+    figsize=(8, 5),
+    random_state=42
+):
+    """
+    ICE/PDP plot for XGBoost or ANY model that supports predict_proba.
+    Works on RAW INPUT (XGBoost expects raw).
+    """
+
+    # --- 1. Feature index ---
+    if feature_name not in all_vars:
+        raise ValueError(f"{feature_name} not in all_vars.")
+    idx = all_vars.index(feature_name)
+
+    # --- 2. Raw grid ---
+    raw_col = X[:, idx]
+    low, high = np.percentile(raw_col, [0.5, 99.5])
+    raw_grid = np.linspace(low, high, num_points)
+
+    # --- 3. Select samples ---
+    N = X.shape[0]
+    if n_samples is None or n_samples >= N:
+        sample_idx = np.arange(N)
+    else:
+        rng = np.random.default_rng(random_state)
+        sample_idx = rng.choice(N, size=n_samples, replace=False)
+
+    # --- 4. Compute ICE curves ---
+    ice_values = np.zeros((len(sample_idx), num_points))
+
+    for i, row_idx in enumerate(sample_idx):
+        base = X[row_idx].copy()
+
+        X_eval = np.repeat(base.reshape(1, -1), num_points, axis=0)
+        X_eval[:, idx] = raw_grid  # modify only the target feature
+
+        probs = model.predict_proba(X_eval)[:, 1]
+        ice_values[i] = probs
+
+    # --- 5. PDP ---
+    pdp = ice_values.mean(axis=0)
+
+    # --- 6. Plot ---
+    plt.figure(figsize=figsize)
+
+    if mode in ("ice", "both"):
+        for i in range(len(sample_idx)):
+            plt.plot(raw_grid, ice_values[i], alpha=0.25, color="gray")
+
+    if mode in ("pdp", "both"):
+        plt.plot(raw_grid, pdp, color="red", linewidth=3, label="PDP")
+        plt.legend()
+
+    plt.xlabel(f"{feature_name} (raw scale)")
+    plt.ylabel("Predicted probability")
+    plt.title(f"ICE/PDP for '{feature_name}' — samples: {len(sample_idx)}")
+    plt.grid(True)
+    plt.show()
+
+    return {
+        "raw_grid": raw_grid,
+        "ice_values": ice_values,
+        "pdp": pdp,
+        "sample_idx": sample_idx
+    }

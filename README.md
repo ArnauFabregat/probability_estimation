@@ -138,3 +138,4 @@ Open a terminal in VSCode and execute the following command:
 - Add more verbose or logger info/warning
 - Add docstring and typing to utils
 - Compare performance with LGBM or XGBoost
+- Explore adding more hidden layers to the NN
