@@ -5,8 +5,10 @@ description = "Open source project to build a churn probability prediction syste
 readme = "README.md"
 requires-python = "==3.13.12"
 dependencies = [
+    "matplotlib>=3.10.8",
     "pandas>=3.0.0",
     "pydantic>=2.12.5",
+    "scikit-learn>=1.8.0",
     "torch>=2.10.0",
     "tqdm>=4.67.3",
 ]
