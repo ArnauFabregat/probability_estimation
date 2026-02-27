@@ -1,8 +1,16 @@
-# churn_models
-*project description*
+# Monotonic Classification for Churn Probability Estimation with Calibration and Sensitivity Diagnostics
+This repository explores monotonic machine‑learning models for customer churn probability estimation, comparing:
+- Tree‑based monotonic classifiers (e.g., monotonic XGBoost, LightGBM constraints)
+- A custom PyTorch Monotonic Neural Network architecture using constrained linear layers
 
-Tech stack:
-- ...
+The project focuses on building churn models where feature–response relationships follow known business logic (e.g., more products → lower churn). It includes:
+
+- Probability calibration (Platt scaling, isotonic, temperature scaling)
+- Feature‑level sensitivity via ICE curves (Individual Conditional Expectation)
+- Global partial effects with PDP (Partial Dependence Plots)
+- End‑to‑end pipeline: preprocessing, training, model comparison, interpretability
+
+The goal is to provide accurate, interpretable, and business‑consistent churn probabilities.
 
 ## Table of Contents
 
