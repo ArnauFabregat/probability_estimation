@@ -9,21 +9,45 @@ from pydantic import BaseModel, Field, PositiveInt, PositiveFloat
 
 
 class OptimizerParams(BaseModel):
+    """
+    Hyperparameters used to configure the optimizer and early‑stopping
+    behavior during training.
+
+    Parameters
+    ----------
+    lr : PositiveFloat, default=1e-3
+        Learning rate for the optimizer.
+
+    weight_decay : float, default=1e-4
+        L2 regularization coefficient applied to the optimizer.
+        Must be non‑negative.
+
+    batch_size : PositiveInt, default=1024
+        Minibatch size used during training.
+
+    patience : PositiveInt, default=10
+        Number of consecutive epochs without improvement in validation loss
+        before early stopping is triggered.
+
+    min_delta : float, default=1e-4
+        Minimum required reduction in validation loss to count as an
+        improvement. Smaller changes are ignored for early stopping.
+    """
     lr: PositiveFloat = 1e-3
     weight_decay: float = Field(default=1e-4, ge=0)
     batch_size: PositiveInt = 1024
     patience: PositiveInt = 10
-    min_delta: float = 1e-4  # Minimum change to qualify as improvement
+    min_delta: float = 1e-4
 
 
 class MonotonicLinear(nn.Module):
     """
-    A Linear layer with **built-in monotonicity constraints** applied through
+    A linear layer with monotonicity constraints enforced through
     softplus-based weight reparameterization.
 
-    This layer guarantees that the sign of the partial derivative with respect to
-    each input dimension remains fixed, which is essential for monotonic neural
-    networks.
+    This layer ensures that the sign of the partial derivative of the output
+    with respect to each input dimension remains fixed, making it suitable
+    for monotonic neural networks.
 
     Parameters
     ----------
@@ -33,8 +57,8 @@ class MonotonicLinear(nn.Module):
         Number of output features.
     sign : str, optional (default="+")
         Monotonicity direction:
-            "+" enforces positive monotonicity (∂y/∂x >= 0)
-            "-" enforces negative monotonicity (∂y/∂x <= 0)
+            "+" → enforces ∂y/∂x >= 0 (positive monotonicity)
+            "-" → enforces ∂y/∂x <= 0 (negative monotonicity)
 
     Forward Input
     -------------
@@ -48,14 +72,12 @@ class MonotonicLinear(nn.Module):
 
     Notes
     -----
-    - softplus ensures smoothness and better gradient behavior than exp().
-    - bias is unconstrained because it does not affect monotonicity.
-    - For **positive monotonicity** w.r.t. the inputs:
-        MonotonicLinear(..., sign="+")
-        weight =  softplus(raw_weight)
-    - For **negative monotonicity** w.r.t. the inputs:
-        MonotonicLinear(..., sign="-")
-        weight = -softplus(raw_weight)
+    - `softplus` guarantees smooth, strictly positive transformed weights.
+    - Bias parameters remain unconstrained (do not affect monotonicity).
+    - Positive monotonicity:
+          weight =  softplus(raw_weight)
+    - Negative monotonicity:
+          weight = -softplus(raw_weight)
     """
 
     def __init__(self,
@@ -107,38 +129,38 @@ class MonotonicLinear(nn.Module):
 
 class MonotonicNN(nn.Module):
     """
-    Monotonic Neural Network with three optional branches enforcing different
-    monotonicity behaviors with respect to subsets of input variables.
+    Monotonic neural network with three optional branches enforcing different
+    monotonicity behaviors over subsets of input variables.
 
-    Branches:
-    ---------
+    Branches
+    --------
     1. Non‑monotonic branch:
          - Inputs: variables in `non_monotonic_vars`
-         - No constraints on weights (fully flexible)
-         - One hidden layer (Linear + tanh)
+         - No constraints on weights
+         - Architecture: Linear → tanh
 
     2. Positive‑monotonic branch:
          - Inputs: variables in `positive_monotonic_vars`
-         - First‑layer weights constrained to be >= 0
-         - Output‑layer weights from this branch constrained to be >= 0
+         - First-layer weights >= 0
+         - Output-layer weights >= 0
          - Ensures ∂output/∂variable >= 0
 
     3. Negative‑monotonic branch:
          - Inputs: variables in `negative_monotonic_vars`
-         - First‑layer weights constrained to be <= 0
-         - Output‑layer weights from this branch constrained to be >= 0
+         - First-layer weights <= 0
+         - Output-layer weights >= 0
          - Ensures ∂output/∂variable <= 0
 
-    Output:
-    -------
-    - A probability in [0, 1] obtained by applying sigmoid to the final logit.
-
-    Notes:
+    Output
     ------
-    - Branch sizes are configurable.
-    - Variables must appear in `all_variables` in the same order as columns of x.
-    - Monotonicity constraints are enforced **after each optimizer step** via
-      `monotonic_constraint()`.
+    Produces a single logit, then applies a sigmoid to obtain a probability
+    in the range [0, 1].
+
+    Notes
+    -----
+    - Branch widths are configurable.
+    - Feature names must match the column order in the input tensor `x`.
+    - Monotonicity is enforced at the layer level via `MonotonicLinear`.
     """
 
     def __init__(self,
@@ -153,19 +175,20 @@ class MonotonicNN(nn.Module):
         Parameters
         ----------
         all_variables : list[str]
-            Full list of variable names, matching the column order of the input tensor.
+            Full ordered list of feature names matching columns of the input tensor.
 
         non_monotonic_vars : list[str]
-            Variables with no monotonicity constraints.
+            Variables without monotonicity constraints.
 
         positive_monotonic_vars : list[str]
-            Variables required to have a non‑negative effect on the output.
+            Variables required to have non-negative effect on the output.
 
         negative_monotonic_vars : list[str]
-            Variables required to have a non‑positive effect on the output.
+            Variables required to have non-positive effect on the output.
 
         hidden_non, hidden_pos, hidden_neg : int
-            Number of hidden units per branch.
+            Number of hidden units in the non‑monotonic, positive‑monotonic,
+            and negative‑monotonic branches respectively.
         """
         super().__init__()
 
@@ -239,11 +262,10 @@ class MonotonicNN(nn.Module):
 
     def _init_weights(self) -> None:
         """
-        Apply Xavier initialization to all Linear layers, including
-        custom MonotonicLinear layers by initializing their raw weights.
+        Initialize weights using Xavier uniform initialization for all layers.
 
-        - nn.Linear → initialize .weight and .bias
-        - MonotonicLinear → initialize .raw_weight and .bias
+        - nn.Linear layers: initialize `.weight` and `.bias`
+        - MonotonicLinear layers: initialize `.raw_weight` and `.bias`
         """
         for m in self.modules():
 
@@ -261,46 +283,34 @@ class MonotonicNN(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Compute the forward pass of the monotonic neural network.
+        Forward pass of the monotonic neural network.
 
-        Steps:
-        ------
-        1. Split the input tensor into subsets of features according to their
-        monotonicity groups:
-            - non‑monotonic variables
-            - positively monotonic variables
-            - negatively monotonic variables
+        Steps
+        -----
+        1. Split the input tensor into feature subsets based on their
+        monotonicity group.
 
-        2. Each subset is passed through its corresponding branch:
-            - Non‑monotonic branch:      Linear → tanh
-            - Positive‑monotonic branch: MonotonicLinear(sign="+") → tanh
-            - Negative‑monotonic branch: MonotonicLinear(sign="-") → tanh
+        2. Pass each subset through its corresponding branch:
+            - Non‑monotonic:      Linear → tanh
+            - Positive‑monotonic: MonotonicLinear(sign="+") → tanh
+            - Negative‑monotonic: MonotonicLinear(sign="-") → tanh
 
-        3. Each branch produces a hidden representation, which is fed into its
-        own output layer:
-            - out_non: standard Linear
-            - out_pos: MonotonicLinear(sign="+")
-            - out_neg: MonotonicLinear(sign="+")
-        (Positive sign is correct for both monotonic branches because the
-        hidden-layer sign determines the derivative direction.)
+        3. Send branch hidden outputs to their respective output layers.
 
-        4. The three output logits are **summed**, not concatenated, preserving
-        monotonicity and avoiding interaction terms that could break it.
+        4. Sum logits from all active branches (not concatenated), preserving
+        monotonicity.
 
-        5. A final sigmoid is applied to convert the summed logit into a
-        probability in [0, 1].
+        5. Return the summed logit (sigmoid is applied externally if needed).
 
         Parameters
         ----------
         x : torch.Tensor
-            Input tensor of shape [batch_size, num_variables], where the columns
-            appear in the same order as `self.all_variables`.
+            Input tensor of shape [batch_size, num_features].
 
         Returns
         -------
         torch.Tensor
-            Tensor of shape [batch_size, 1] containing the predicted probability
-            for each input sample.
+            Logit tensor of shape [batch_size, 1].
         """
 
         # Apply each branch if present
@@ -335,27 +345,50 @@ class MonotonicNN(nn.Module):
         verbose: bool = True,
     ) -> dict[str, list[float]]:
         """
-        Train the model using a simple minibatch loop with monotonic projection after each step.
+        Train the model using minibatch gradient descent with optional validation
+        and early stopping.
 
         Parameters
         ----------
+        x_tr : torch.Tensor
+            Training input tensor of shape [N, d].
+
+        y_tr : torch.Tensor
+            Training target tensor of shape [N].
+
+        x_val : torch.Tensor, optional
+            Validation input tensor.
+
+        y_val : torch.Tensor, optional
+            Validation target tensor.
+
+        pos_weight : float, default=1.0
+            Positive class weight for BCEWithLogitsLoss.
+
         epochs : int
-            Number of epochs.
-        batch_size : int
-            Minibatch size.
-        lr : float
-            Learning rate.
-        optimizer_cls : torch.optim.Optimizer
-            Optimizer class to instantiate (e.g., RMSprop, Adam).
-        device : str | torch.device
-            Device to train on.
-        verbose : bool
-            Print epoch loss.
+            Number of epochs to train.
+
+        optimizer_params : OptimizerParams
+            Hyperparameters for the optimizer and early stopping.
+
+        shuffle : bool, default=True
+            Whether to shuffle minibatches.
+
+        num_workers : int, default=0
+            DataLoader worker count.
+
+        device : str or torch.device, default="cpu"
+            Training device.
+
+        verbose : bool, default=True
+            Print progress and loss values during training.
 
         Returns
         -------
-        dict
-            Training history with avg loss per epoch.
+        dict[str, list[float]]
+            Training history containing:
+                - "train_loss" : list of training losses per epoch
+                - "val_loss"   : list of validation losses per epoch (if provided)
         """
         self.to(device)
 
@@ -445,18 +478,17 @@ class MonotonicNN(nn.Module):
     @torch.no_grad()
     def predict_proba(self, x: numpy.ndarray) -> numpy.ndarray:
         """
-        Eval the model and transform its output to obtain the statistical probability of belonging to the minority
-        class for each sample.
+        Evaluate the model and return predicted probabilities.
 
         Parameters
         ----------
-        x : numpy.ndarray)
-            The input matrix NxM containing M dimensions for N sampels.
+        x : numpy.ndarray
+            Input array of shape [N, d] containing N samples and d features.
 
         Returns
         -------
         numpy.ndarray
-            The probability of belonging to the minority class for each sample evaluated.
+            Probability of belonging to the positive class for each sample.
         """
         self.eval()
         device = next(self.parameters()).device
