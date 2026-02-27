@@ -124,8 +124,4 @@ Open a terminal in VSCode and execute the following command:
 
 ## TODO
 - Switch from MSE to BCEWithLogitsLoss. Replace manual sigmoid + MSE with logits‑based loss. Remove final sigmoid in forward().
-- Move feature masks to registered buffers. Avoid calling .to(device) every forward pass.
-- Add self.eval() inside predict_proba(). Ensures dropout/batchnorm (if added later) behave correctly.
 - Refactor branch summation into a dedicated method. Makes debugging easier.
-- Add weighted BCE / focal loss support. Especially useful for imbalanced classification.
-- Add inference with torch.no_grad() and device handling. Avoid unnecessary GPU copies in inference.

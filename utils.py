@@ -179,17 +179,39 @@ class MonotonicNN(nn.Module):
         name_to_idx = {name: i for i, name in enumerate(self.all_variables)}
 
         # Masks selecting the input columns for each branch
-        self.mask_non = (torch.tensor([name_to_idx[n] for n in self.non_monotonic_vars], dtype=torch.long)
-                         if self.non_monotonic_vars else None)
-        self.mask_pos = (torch.tensor([name_to_idx[n] for n in self.positive_monotonic_vars], dtype=torch.long)
-                         if self.positive_monotonic_vars else None)
-        self.mask_neg = (torch.tensor([name_to_idx[n] for n in self.negative_monotonic_vars], dtype=torch.long)
-                         if self.negative_monotonic_vars else None)
+        if self.non_monotonic_vars:
+            self.register_buffer(
+                "mask_non",
+                torch.tensor([name_to_idx[n] for n in self.non_monotonic_vars], dtype=torch.long)
+            )
+        else:
+            self.mask_non = None
+
+        if self.positive_monotonic_vars:
+            self.register_buffer(
+                "mask_pos",
+                torch.tensor([name_to_idx[n] for n in self.positive_monotonic_vars], dtype=torch.long)
+            )
+        else:
+            self.mask_pos = None
+
+        if self.negative_monotonic_vars:
+            self.register_buffer(
+                "mask_neg",
+                torch.tensor([name_to_idx[n] for n in self.negative_monotonic_vars], dtype=torch.long)
+            )
+        else:
+            self.mask_neg = None
 
         # Define hidden-layer branches (Linear layer only; tanh applied in forward)
         # Can add more layers if desired, but need to enforce constraints on all layers for monotonic branches
-        self.lin_non = (nn.Linear(len(self.non_monotonic_vars), hidden_non)
-                        if self.non_monotonic_vars and hidden_non > 0 else None)
+        self.lin_non = (
+            nn.Linear(
+                len(self.non_monotonic_vars),
+                hidden_non
+            )
+            if self.non_monotonic_vars and hidden_non > 0 else None
+        )
         self.lin_pos = (
             MonotonicLinear(
                 in_features=len(positive_monotonic_vars),
@@ -285,15 +307,15 @@ class MonotonicNN(nn.Module):
         total_logit: float = 0.0
 
         if self.lin_non:
-            h = torch.tanh(self.lin_non(x.index_select(1, self.mask_non.to(x.device))))  # type: ignore
+            h = torch.tanh(self.lin_non(x.index_select(1, self.mask_non)))  # type: ignore
             total_logit += self.out_non(h)  # type: ignore
 
         if self.lin_pos:
-            h = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos.to(x.device))))  # type: ignore
+            h = torch.tanh(self.lin_pos(x.index_select(1, self.mask_pos)))  # type: ignore
             total_logit += self.out_pos(h)  # type: ignore
 
         if self.lin_neg:
-            h = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg.to(x.device))))  # type: ignore
+            h = torch.tanh(self.lin_neg(x.index_select(1, self.mask_neg)))  # type: ignore
             total_logit += self.out_neg(h)  # type: ignore
 
         return torch.sigmoid(total_logit)  # type: ignore
@@ -433,8 +455,10 @@ class MonotonicNN(nn.Module):
         numpy.ndarray
             The probability of belonging to the minority class for each sample evaluated.
         """
+        self.eval()
+        device = next(self.parameters()).device
 
-        x_input = torch.from_numpy(x).float()
-        output = self.forward(x=x_input).detach().numpy()
+        x_input = torch.from_numpy(x).float().to(device)
+        output = self.forward(x_input).cpu().numpy()
 
         return output
