@@ -392,6 +392,10 @@ class MonotonicNN(nn.Module):
         """
         self.to(device)
 
+        # Ensure reproducibility
+        torch.manual_seed(42)
+        numpy.random.seed(42)
+
         dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
         loader = torch.utils.data.DataLoader(
             dataset,
