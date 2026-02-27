@@ -470,3 +470,16 @@ class MonotonicNN(nn.Module):
         logits = self.forward(x_input)
         probs = torch.sigmoid(logits).cpu().numpy()
         return probs
+
+    @torch.no_grad()
+    def predict_logits(self, x: numpy.ndarray) -> numpy.ndarray:
+        """
+        Return raw logits (before sigmoid).
+        Required for temperature scaling.
+        """
+        self.eval()
+        device = next(self.parameters()).device
+
+        x_input = torch.from_numpy(x).float().to(device)
+        logits = self.forward(x_input)
+        return logits.cpu().numpy()
