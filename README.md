@@ -139,3 +139,4 @@ Open a terminal in VSCode and execute the following command:
 - Add docstring and typing to utils
 - Compare performance with LGBM or XGBoost
 - Explore adding more hidden layers to the NN
+- Compare different datasets: bank, telco, master, breast cancer form sklearn

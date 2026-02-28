@@ -168,33 +168,43 @@ def ice_pdp_plot(
     }
 
 
-def ice_pdp_plot_xgb(
+def ice_pdp_plot_xgb_or_nn(
     model,
-    X,                # raw input data (no standardization)
+    X,                
     feature_name,
     all_vars,
     n_samples=None,
     num_points=50,
     mode="both",
     figsize=(8, 5),
-    random_state=42
+    random_state=42,
+    calibrator=None,          
+    plot_calibrated=True     
 ):
     """
-    ICE/PDP plot for XGBoost or ANY model that supports predict_proba.
-    Works on RAW INPUT (XGBoost expects raw).
+    ICE/PDP plot for:
+      - XGBoost / sklearn models (predict_proba)
+      - Neural nets when used with Calibrator(method='temperature')
+
+    Only two calibration behaviors:
+      * If calibrator.method in {"platt","isotonic"}:
+            p_raw = model.predict_proba(X_eval)[:,1]
+            p = calibrator.predict_proba(p_raw)
+      * If calibrator.method == "temperature":
+            p = calibrator.predict_proba(X_eval)
     """
 
-    # --- 1. Feature index ---
+    # --- 1. Find feature index ---
     if feature_name not in all_vars:
         raise ValueError(f"{feature_name} not in all_vars.")
     idx = all_vars.index(feature_name)
 
-    # --- 2. Raw grid ---
+    # --- 2. Build raw grid ---
     raw_col = X[:, idx]
     low, high = np.percentile(raw_col, [0.5, 99.5])
     raw_grid = np.linspace(low, high, num_points)
 
-    # --- 3. Select samples ---
+    # --- 3. Sample rows ---
     N = X.shape[0]
     if n_samples is None or n_samples >= N:
         sample_idx = np.arange(N)
@@ -202,17 +212,40 @@ def ice_pdp_plot_xgb(
         rng = np.random.default_rng(random_state)
         sample_idx = rng.choice(N, size=n_samples, replace=False)
 
-    # --- 4. Compute ICE curves ---
+    # --- Helper: raw probs from model ---
+    def get_raw_probs(X_eval):
+        p = model.predict_proba(X_eval)
+        if p.ndim == 2:
+            return p[:, 1]
+        return p
+
+    # --- Helper: apply calibration depending on method ---
+    def get_calibrated(X_eval):
+        if calibrator is None or not plot_calibrated:
+            return get_raw_probs(X_eval)
+
+        method = calibrator.method
+
+        # temperature → classifier not needed, calibrator consumes X directly
+        if method == "temperature":
+            p = calibrator.predict_proba(X_eval)
+            if getattr(p, "ndim", 1) == 2:
+                p = p[:, 1]
+            return np.asarray(p)
+
+        # platt / isotonic → calibrator expects raw prob vector
+        p_raw = get_raw_probs(X_eval)
+        p_cal = calibrator.predict_proba(p_raw)
+        return np.asarray(p_cal).reshape(-1)
+
+    # --- 4. Compute ICE ---
     ice_values = np.zeros((len(sample_idx), num_points))
 
     for i, row_idx in enumerate(sample_idx):
         base = X[row_idx].copy()
-
         X_eval = np.repeat(base.reshape(1, -1), num_points, axis=0)
-        X_eval[:, idx] = raw_grid  # modify only the target feature
-
-        probs = model.predict_proba(X_eval)[:, 1]
-        ice_values[i] = probs
+        X_eval[:, idx] = raw_grid
+        ice_values[i] = get_calibrated(X_eval)
 
     # --- 5. PDP ---
     pdp = ice_values.mean(axis=0)
@@ -225,11 +258,13 @@ def ice_pdp_plot_xgb(
             plt.plot(raw_grid, ice_values[i], alpha=0.25, color="gray")
 
     if mode in ("pdp", "both"):
-        plt.plot(raw_grid, pdp, color="red", linewidth=3, label="PDP")
+        label = "PDP (calibrated)" if calibrator and plot_calibrated else "PDP"
+        plt.plot(raw_grid, pdp, color="red", linewidth=3, label=label)
         plt.legend()
 
     plt.xlabel(f"{feature_name} (raw scale)")
-    plt.ylabel("Predicted probability")
+    ylabel = "Calibrated probability" if (calibrator and plot_calibrated) else "Predicted probability"
+    plt.ylabel(ylabel)
     plt.title(f"ICE/PDP for '{feature_name}' — samples: {len(sample_idx)}")
     plt.grid(True)
     plt.show()
