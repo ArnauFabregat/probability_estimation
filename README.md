@@ -131,12 +131,10 @@ Open a terminal in VSCode and execute the following command:
 * `uv sync`
 
 ## TODO
-- Add normalization before the data enters the NN
-- Add probability calibration after the data exits the NN
 - Add classification metrics after the data exits the NN
 - Fix nn.fit prints format
 - Add more verbose or logger info/warning
-- Add docstring and typing to utils
-- Compare performance with LGBM or XGBoost
+- Add docstring and typing to code inside src
+- Compare performance with LGBM
 - Explore adding more hidden layers to the NN
 - Compare different datasets: bank, telco, master, breast cancer form sklearn

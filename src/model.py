@@ -474,12 +474,11 @@ class MonotonicNN(nn.Module):
     @torch.no_grad()
     def predict_logits(self, x: numpy.ndarray) -> numpy.ndarray:
         """
-        Return raw logits (before sigmoid).
+        Return tensor of raw logits.
         Required for temperature scaling.
         """
         self.eval()
         device = next(self.parameters()).device
-
-        x_input = torch.from_numpy(x).float().to(device)
-        logits = self.forward(x_input)
-        return logits.cpu().numpy()
+        x_t = torch.from_numpy(x).float().to(device)
+        logits = self.forward(x_t)
+        return logits

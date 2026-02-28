@@ -1,7 +1,8 @@
+# type: ignore
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
-from sklearn.calibration import calibration_curve
+from typing import Optional, Sequence, Dict, Any
 
 
 # TODO review - done with vibe coding
@@ -54,203 +55,109 @@ def get_best_f1(y_true, y_proba, num_thresholds=200):
     return best_threshold, best_f1, f1_curve, thresholds
 
 
-def ice_pdp_plot(
-    model,
-    X_raw,           # original-scale data (N, d)
-    X_std,           # standardized data (N, d)
-    feature_name,    # feature name
-    all_vars,        # model variable order
-    n_samples=None,  # None = use ALL samples, else subsample
-    num_points=50,   # resolution
-    mode="both",     # "ice", "pdp", or "both"
-    figsize=(8, 5),
-    random_state=42
-):
-    """
-    Combined ICE + PDP (partial dependence) plot for a feature.
-
-    Parameters
-    ----------
-    model : trained MonotonicNN
-    X_raw : ndarray
-        Raw/original-scale data
-    X_std : ndarray
-        Standardized data used for the model
-    feature_name : str
-        Feature for analysis
-    all_vars : list[str]
-        Feature names in model input order
-    n_samples : int or None
-        - None: use ALL samples for ICE curves
-        - int : subsample that many individuals
-    num_points : int
-        Number of grid points
-    mode : "ice", "pdp", or "both"
-        Controls what is plotted
-    figsize : tuple
-        Size of the plot
-    random_state : int
-        RNG seed for reproducible subsampling
-
-    Returns
-    -------
-    dict containing:
-        "raw_grid": raw feature grid
-        "std_grid": standardized grid
-        "ice_values": array (n_samples, num_points)
-        "pdp": array (num_points,)
-        "sample_idx": sampled row indices
-    """
-
-    # --- 1. Feature index ---
-    if feature_name not in all_vars:
-        raise ValueError(f"{feature_name} not in all_vars.")
-    idx = all_vars.index(feature_name)
-
-    # --- 2. Raw grid ---
-    raw_col = X_raw[:, idx]
-    low, high = np.percentile(raw_col, [0.5, 99.5])
-    raw_grid = np.linspace(low, high, num_points)
-
-    # standardize grid (no scaler passed)
-    mean = raw_col.mean()
-    std = raw_col.std()
-    std_grid = (raw_grid - mean) / std
-
-    # --- 3. Decide which samples to use ---
-    N = X_raw.shape[0]
-
-    if n_samples is None or n_samples >= N:
-        # use ALL samples
-        sample_idx = np.arange(N)
-    else:
-        rng = np.random.default_rng(random_state)
-        sample_idx = rng.choice(N, size=n_samples, replace=False)
-
-    # --- 4. Compute ICE values ---
-    ice_values = np.zeros((len(sample_idx), num_points))
-
-    for i, row_idx in enumerate(sample_idx):
-        base_std = X_std[row_idx].copy()
-
-        X_eval = np.repeat(base_std.reshape(1, -1), num_points, axis=0)
-        X_eval[:, idx] = std_grid
-
-        probs = model.predict_proba(X_eval).reshape(-1)
-        ice_values[i] = probs
-
-    # --- 5. PDP (mean of ICE) ---
-    pdp = ice_values.mean(axis=0)
-
-    # --- 6. Plot ---
-    plt.figure(figsize=figsize)
-
-    if mode in ("ice", "both"):
-        for i in range(len(sample_idx)):
-            plt.plot(raw_grid, ice_values[i], alpha=0.25, color="gray")
-
-    if mode in ("pdp", "both"):
-        plt.plot(raw_grid, pdp, color="red", linewidth=3, label="PDP (average ICE)")
-        plt.legend()
-
-    plt.xlabel(f"{feature_name} (raw scale)")
-    plt.ylabel("Predicted probability")
-    plt.title(f"ICE/PDP for '{feature_name}' — samples: {len(sample_idx)}")
-    plt.grid(True)
-    plt.show()
-
-    return {
-        "raw_grid": raw_grid,
-        "std_grid": std_grid,
-        "ice_values": ice_values,
-        "pdp": pdp,
-        "sample_idx": sample_idx
-    }
-
-
 def ice_pdp_plot_xgb_or_nn(
     model,
-    X,                
-    feature_name,
-    all_vars,
-    n_samples=None,
-    num_points=50,
-    mode="both",
+    X_std: np.ndarray,                 # standardized features → for NN models
+    X_raw: np.ndarray,                 # original features → for axis/grid (and trees)
+    feature_name: str,
+    all_vars: Sequence[str],
+    num_points: int = 50,
+    n_samples: Optional[int] = None,
+    mode: str = "both",                # "ice" | "pdp" | "both"
+    calibrator: Optional[object] = None,
+    plot_calibrated: bool = False,
     figsize=(8, 5),
-    random_state=42,
-    calibrator=None,          
-    plot_calibrated=True     
-):
+    random_state: int = 42,
+    grid_percentiles: tuple[float, float] = (0.5, 99.5),
+) -> Dict[str, Any]:
     """
-    ICE/PDP plot for:
-      - XGBoost / sklearn models (predict_proba)
-      - Neural nets when used with Calibrator(method='temperature')
-
-    Only two calibration behaviors:
-      * If calibrator.method in {"platt","isotonic"}:
-            p_raw = model.predict_proba(X_eval)[:,1]
-            p = calibrator.predict_proba(p_raw)
-      * If calibrator.method == "temperature":
-            p = calibrator.predict_proba(X_eval)
+    Uses standardized inputs iff calibrator indicates temperature scaling;
+    otherwise uses raw/original inputs. Plot x-axis is always in original units.
     """
 
-    # --- 1. Find feature index ---
+    # --- 0) Decide which representation to feed the model ---
+    def is_temperature_scaler(cal) -> bool:
+        if cal is None:
+            return False
+        m = getattr(cal, "method", None)
+        if isinstance(m, str) and m.lower() == "temperature":
+            return True
+        # Also support a logits temperature calibrator without .method
+        return hasattr(cal, "temperature")
+
+    use_standardized_for_model = is_temperature_scaler(calibrator)
+
+    # --- 1) Find feature index ---
     if feature_name not in all_vars:
         raise ValueError(f"{feature_name} not in all_vars.")
     idx = all_vars.index(feature_name)
 
-    # --- 2. Build raw grid ---
-    raw_col = X[:, idx]
-    low, high = np.percentile(raw_col, [0.5, 99.5])
-    raw_grid = np.linspace(low, high, num_points)
+    # --- 2) Build grid in ORIGINAL units and (optionally) convert to STANDARDIZED ---
+    raw_col = X_raw[:, idx]
+    low, high = np.percentile(raw_col, list(grid_percentiles))
+    raw_grid = np.linspace(low, high, num_points)  # original units
 
-    # --- 3. Sample rows ---
-    N = X.shape[0]
+    # z = (x - mean) / std for the selected feature
+    mean = raw_col.mean()
+    std = raw_col.std(ddof=0) if raw_col.shape[0] > 1 else 1.0
+    std = (std if std != 0 else 1.0)
+    std_grid = (raw_grid - mean) / std
+
+    # --- 3) Sample rows ---
+    N = X_std.shape[0]
     if n_samples is None or n_samples >= N:
         sample_idx = np.arange(N)
     else:
         rng = np.random.default_rng(random_state)
         sample_idx = rng.choice(N, size=n_samples, replace=False)
 
-    # --- Helper: raw probs from model ---
+    # --- Helpers ---
     def get_raw_probs(X_eval):
         p = model.predict_proba(X_eval)
+        p = np.asarray(p)
         if p.ndim == 2:
-            return p[:, 1]
-        return p
+            if p.shape[1] == 2:
+                return p[:, 1]
+            else:
+                return p[:, 0]
+        return p.reshape(-1)
 
-    # --- Helper: apply calibration depending on method ---
     def get_calibrated(X_eval):
         if calibrator is None or not plot_calibrated:
             return get_raw_probs(X_eval)
 
-        method = calibrator.method
+        method = getattr(calibrator, "method", None)
+        if method == "temperature" or hasattr(calibrator, "temperature"):
+            # Temperature scaling expects LOGITS from the model
+            logits = model.predict_logits(X_eval).reshape(-1)
+            return calibrator.predict_proba(logits)
 
-        # temperature → classifier not needed, calibrator consumes X directly
-        if method == "temperature":
-            p = calibrator.predict_proba(X_eval)
-            if getattr(p, "ndim", 1) == 2:
-                p = p[:, 1]
-            return np.asarray(p)
-
-        # platt / isotonic → calibrator expects raw prob vector
+        # Platt / isotonic → pass probabilities
         p_raw = get_raw_probs(X_eval)
         p_cal = calibrator.predict_proba(p_raw)
         return np.asarray(p_cal).reshape(-1)
 
-    # --- 4. Compute ICE ---
-    ice_values = np.zeros((len(sample_idx), num_points))
+    # --- 4) Compute ICE ---
+    ice_values = np.zeros((len(sample_idx), num_points), dtype=float)
 
     for i, row_idx in enumerate(sample_idx):
-        base = X[row_idx].copy()
-        X_eval = np.repeat(base.reshape(1, -1), num_points, axis=0)
-        X_eval[:, idx] = raw_grid
+        if use_standardized_for_model:
+            # NN / temperature calibrator path → standardized inputs
+            base = X_std[row_idx].copy()
+            X_eval = np.repeat(base.reshape(1, -1), num_points, axis=0)
+            X_eval[:, idx] = std_grid
+        else:
+            # Trees / non-temperature path → raw/original inputs
+            base = X_raw[row_idx].copy()
+            X_eval = np.repeat(base.reshape(1, -1), num_points, axis=0)
+            X_eval[:, idx] = raw_grid
+
         ice_values[i] = get_calibrated(X_eval)
 
-    # --- 5. PDP ---
+    # --- 5) PDP ---
     pdp = ice_values.mean(axis=0)
 
-    # --- 6. Plot ---
+    # --- 6) Plot (x-axis in ORIGINAL units) ---
     plt.figure(figsize=figsize)
 
     if mode in ("ice", "both"):
@@ -258,11 +165,11 @@ def ice_pdp_plot_xgb_or_nn(
             plt.plot(raw_grid, ice_values[i], alpha=0.25, color="gray")
 
     if mode in ("pdp", "both"):
-        label = "PDP (calibrated)" if calibrator and plot_calibrated else "PDP"
+        label = "PDP (calibrated)" if (calibrator and plot_calibrated) else "PDP"
         plt.plot(raw_grid, pdp, color="red", linewidth=3, label=label)
         plt.legend()
 
-    plt.xlabel(f"{feature_name} (raw scale)")
+    plt.xlabel(f"{feature_name} (original scale)")
     ylabel = "Calibrated probability" if (calibrator and plot_calibrated) else "Predicted probability"
     plt.ylabel(ylabel)
     plt.title(f"ICE/PDP for '{feature_name}' — samples: {len(sample_idx)}")
@@ -270,67 +177,9 @@ def ice_pdp_plot_xgb_or_nn(
     plt.show()
 
     return {
-        "raw_grid": raw_grid,
-        "ice_values": ice_values,
-        "pdp": pdp,
+        "raw_grid": raw_grid,      # original units (x-axis)
+        "std_grid": std_grid,      # corresponding standardized values (for NN case)
+        "ice_values": ice_values,  # [n_samples_used, num_points]
+        "pdp": pdp,                # [num_points]
         "sample_idx": sample_idx
     }
-
-
-def plot_calibration_curves(y_true, raw_probs, cal_probs, n_bins=10):
-
-    frac_raw, mean_raw = calibration_curve(y_true, raw_probs, n_bins=n_bins)
-    frac_cal, mean_cal = calibration_curve(y_true, cal_probs, n_bins=n_bins)
-
-    plt.figure(figsize=(7, 6))
-
-    # Perfect calibration line
-    plt.plot([0, 1], [0, 1], "k--", label="Perfect calibration")
-
-    # Raw
-    plt.plot(mean_raw, frac_raw, "s-", label="Raw model")
-
-    # Calibrated
-    plt.plot(mean_cal, frac_cal, "o-", label="Calibrated")
-
-    plt.xlabel("Predicted probability")
-    plt.ylabel("Observed frequency")
-    plt.title("Calibration / Reliability Curve")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-
-def plot_histograms(raw_probs, cal_probs, bins=40):
-
-    plt.figure(figsize=(7,5))
-
-    plt.hist(raw_probs, bins=bins, alpha=0.5, label="Raw", density=True)
-    plt.hist(cal_probs, bins=bins, alpha=0.5, label="Calibrated", density=True)
-
-    plt.xlabel("Predicted probability")
-    plt.ylabel("Density")
-    plt.title("Probability Distribution: Raw vs Calibrated")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-
-def plot_raw_vs_calibrated(raw_probs, cal_probs):
-
-    plt.figure(figsize=(6, 6))
-    plt.scatter(raw_probs, cal_probs, alpha=0.3, s=12)
-
-    # Perfect identity line
-    plt.plot([0,1],[0,1], "k--")
-
-    plt.xlabel("Raw probability")
-    plt.ylabel("Calibrated probability")
-    plt.title("Raw vs Calibrated Probability Mapping")
-    plt.grid(True)
-    plt.show()
-
-def calibration_diagnostics(y, raw_probs, cal_probs):
-    plot_calibration_curves(y, raw_probs, cal_probs)
-    plot_histograms(raw_probs, cal_probs)
-    plot_raw_vs_calibrated(raw_probs, cal_probs)
