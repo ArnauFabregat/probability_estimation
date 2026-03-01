@@ -1,7 +1,7 @@
 # Model Calibration & Reliability Analysis
 
 
-**Calibration** is the process of adjusting these "raw" scores so they represent real-world frequencies. This is critical when model outputs are used for **risk assessment**, **expected value calculations**, or **clinical/business decision-making** where the exact probability matters, not just the final classification.
+**Calibration** is the process of adjusting "raw" model scores so they represent real-world frequencies. This is critical when model outputs are used for **risk assessment**, **expected value calculations**, or **clinical/business decision-making** where the exact probability matters, not just the final classification.
 
 Most machine learning classifiers (like **XGBoost** or **Neural Networks**) are optimized to minimize a loss function (like Log-Loss) or maximize separation (like AUC), but they don't always produce **reliable probabilities**. To correct these distortions, practitioners typically use one of three calibration families: **Platt Scaling**, **Temperature Scaling**, or **Isotonic Regression**, each of which fixes different types of miscalibration.
 
