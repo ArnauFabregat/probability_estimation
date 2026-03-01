@@ -1,6 +1,9 @@
 # Model Calibration & Reliability Analysis
 
-Most machine learning classifiers (like **XGBoost** or **Neural Networks**) are optimized to minimize a loss function (like Log-Loss) or maximize separation (like AUC), but they don't always produce **reliable probabilities**. 
+
+**Calibration** is the process of adjusting these "raw" scores so they represent real-world frequencies. This is critical when model outputs are used for **risk assessment**, **expected value calculations**, or **clinical/business decision-making** where the exact probability matters, not just the final classification.
+
+Most machine learning classifiers (like **XGBoost** or **Neural Networks**) are optimized to minimize a loss function (like Log-Loss) or maximize separation (like AUC), but they don't always produce **reliable probabilities**. To correct these distortions, practitioners typically use one of three calibration families: **Platt Scaling**, **Temperature Scaling**, or **Isotonic Regression**, each of which fixes different types of miscalibration.
 
 The need for calibration becomes critical in two main scenarios:
 
@@ -12,8 +15,7 @@ The need for calibration becomes critical in two main scenarios:
     * When using parameters like `scale_pos_weight` (XGBoost) or `pos_weight` in `BCEWithLogitsLoss` (PyTorch) to handle imbalanced datasets, we artificially inflate the importance of the minority class. 
     * While this improves the model's ability to separate classes (AUC), it **distorts the absolute probabilities**. The model will systematically over-predict the likelihood of the minority class. 
     * **Calibration acts as the "antidote"**, re-aligning these biased outputs with the real-world prevalence without losing the discriminative power gained from weighting.
-
-**Calibration** is the process of adjusting these "raw" scores so they represent real-world frequencies. This is critical when model outputs are used for **risk assessment**, **expected value calculations**, or **clinical/business decision-making** where the exact probability matters, not just the final classification.
+    * Check: [Why Isotonic Regression Wins on Weighted Models](#why-isotonic-regression-wins-on-weighted-models)
 
 ## 1. Diagnostic Visualizations
 
@@ -62,3 +64,14 @@ The primary metric for model selection is the **Brier Skill Score (BSS)** evalua
 1. **Optimal Calibration:** Choose the method (Platt, Isotonic, or Temperature) that yields the **highest $BSS_{test}$**.
 2. **Threshold for Calibration:** If $BSS_{calibrated} \leq BSS_{raw}$, maintain the **Raw Model**. This indicates that the base model is already well-calibrated or that the calibration process is introducing noise.
 3. **Consistency Check:** If $BSS_{val} \gg BSS_{test}$, the calibrator is **overfitting** the validation set (frequent with Isotonic Regression on small samples). In this case, prefer a more rigid method like Platt Scaling or no calibration at all.
+
+---
+
+## Why Isotonic Regression Wins on Weighted Models
+If you use a strong `pos_weight` (e.g., 10x), your model is no longer just "overconfident"—it is **directionally biased**.
+
+- Temperature Scaling (1-parameter) and Platt Scaling (2-parameter) are **parametric** methods based on the Sigmoid curve. They assume your calibration error is symmetric. They can "stretch" the probability space, but they cannot easily fix the non-linear "skew" caused by class weighting.
+
+- Isotonic Regression is **non-parametric**. It doesn't assume a specific shape or symmetry. It simply maps your model's raw outputs to actual observed frequencies using a piecewise constant function.
+
+- While Temperature Scaling often leaves weighted Neural Networks with a **negative Brier Skill Score (BSS)**, Isotonic Regression is flexible enough to "pull back" biased predictions and move the BSS into positive territory.

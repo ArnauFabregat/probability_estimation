@@ -137,3 +137,4 @@ Open a terminal in VSCode and execute the following command:
 - Add docstring and typing to code inside src
 - Add deeper fine tunning with optuna
 - Explore adding more hidden layers to the NN
+- Make isotonic regression compatible with the NN
