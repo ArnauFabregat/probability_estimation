@@ -1,16 +1,16 @@
-# Monotonic Classification for Churn Probability Estimation with Calibration and Sensitivity Diagnostics
-This repository explores monotonic machine‑learning models for customer churn probability estimation, comparing:
+# Monotonic Classification for Probability Estimation with Calibration and Sensitivity Diagnostics
+This repository explores monotonic machine‑learning models for probability estimation, comparing:
 - Tree‑based monotonic classifiers (e.g., monotonic XGBoost, LightGBM constraints)
 - A custom PyTorch Monotonic Neural Network architecture using constrained linear layers
 
-The project focuses on building churn models where feature–response relationships follow known business logic (e.g., more products → lower churn). It includes:
+The project focuses on building models where feature–response relationships follow known business logic (e.g., more products → lower churn). It includes:
 
 - Probability calibration (Platt scaling, isotonic, temperature scaling)
 - Feature‑level sensitivity via ICE curves (Individual Conditional Expectation)
 - Global partial effects with PDP (Partial Dependence Plots)
 - End‑to‑end pipeline: preprocessing, training, model comparison, interpretability
 
-The goal is to provide accurate, interpretable, and business‑consistent churn probabilities.
+The goal is to provide accurate, interpretable, and business‑consistent probabilities.
 
 ## Table of Contents
 
@@ -131,10 +131,9 @@ Open a terminal in VSCode and execute the following command:
 * `uv sync`
 
 ## TODO
-- Add classification metrics after the data exits the NN
+- Add classification metrics after the data exits the models: compare with probabilistic benchmark
 - Fix nn.fit prints format
 - Add more verbose or logger info/warning
 - Add docstring and typing to code inside src
-- Compare performance with LGBM
+- Add deeper fine tunning with optuna
 - Explore adding more hidden layers to the NN
-- Compare different datasets: bank, telco, master, breast cancer form sklearn

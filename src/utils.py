@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 from typing import Optional, Sequence, Dict, Any
+from sklearn.metrics import brier_score_loss
 
 
 # TODO review - done with vibe coding
@@ -53,6 +54,35 @@ def get_best_f1(y_true, y_proba, num_thresholds=200):
     best_f1 = f1_curve[best_idx]
 
     return best_threshold, best_f1, f1_curve, thresholds
+
+
+def calculate_brier_metrics(y_true, y_probs):
+    """
+    Calcula el BS del model, el BS de referència (baseline) i el Brier Skill Score.
+    """
+    # 1. Brier Score del teu model
+    bs_model = brier_score_loss(y_true, y_probs)
+
+    # 2. Brier Score Baseline (el model "tonto" que diu sempre la mitjana)
+    # La millor constant és la prevalença del conjunt on estàs testejant
+    prevalence = np.mean(y_true)
+    baseline_probs = np.full_like(y_true, fill_value=prevalence, dtype=float)
+    bs_baseline = brier_score_loss(y_true, baseline_probs)
+
+    # 3. Brier Skill Score (BSS)
+    # Si BSS > 0, el model és millor que l'atzar.
+    # Si BSS = 1, el model és perfecte.
+    if bs_baseline == 0:  # Cas teòric sense variància
+        bss = 0.0
+    else:
+        bss = 1 - (bs_model / bs_baseline)
+
+    return {
+        "bs_model": bs_model,
+        "bs_baseline": bs_baseline,
+        "bss": bss,
+        "prevalence": prevalence
+    }
 
 
 def ice_pdp_plot_xgb_or_nn(
