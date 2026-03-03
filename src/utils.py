@@ -1,13 +1,15 @@
-from typing import Any, Dict, Optional, Sequence, Literal
+from collections.abc import Sequence
+from typing import Any, Literal
+
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
-import matplotlib.pyplot as plt
-from sklearn.metrics import f1_score
-from sklearn.metrics import brier_score_loss
+from sklearn.metrics import brier_score_loss, f1_score
 
 
-def get_best_f1(y_true: ArrayLike, y_proba: ArrayLike, num_thresholds: int = 200
-                ) -> tuple[float, float, np.ndarray, np.ndarray]:
+def get_best_f1(
+    y_true: ArrayLike, y_proba: ArrayLike, num_thresholds: int = 200
+) -> tuple[float, float, np.ndarray, np.ndarray]:
     """
     Computes the optimal F1 score by sweeping probability thresholds.
 
@@ -116,14 +118,14 @@ def ice_pdp_plot(
     feature_name: str,
     all_vars: Sequence[str],
     num_points: int = 50,
-    n_samples: Optional[int] = None,
+    n_samples: int | None = None,
     mode: Literal["ice", "pdp", "both"] = "both",
-    calibrator: Optional[object] = None,
+    calibrator: object | None = None,
     figsize: tuple[int, int] = (8, 5),
     random_state: int = 42,
     grid_percentiles: tuple[float, float] = (0.5, 99.5),
     model_input_space: Literal["auto", "raw", "standardized"] = "auto",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Generate ICE (Individual Conditional Expectation) and PDP (Partial Dependence Plot)
     curves for a given feature, supporting both **raw** and **standardized** model
@@ -199,7 +201,7 @@ def ice_pdp_plot(
     # ------------------------------------------------------
     # Helper: detect temperature scaling
     # ------------------------------------------------------
-    def is_temperature_scaler(cal: Optional[object]) -> bool:
+    def is_temperature_scaler(cal: object | None) -> bool:
         """Return True if calibrator behaves like a temperature scaler."""
         if cal is None:
             return False
@@ -280,9 +282,7 @@ def ice_pdp_plot(
         if hasattr(model, "predict"):
             return _to_1d(model.predict(X_eval))
 
-        raise AttributeError(
-            "Model must implement predict_proba(X) or predict(X) returning probabilities."
-        )
+        raise AttributeError("Model must implement predict_proba(X) or predict(X) returning probabilities.")
 
     def _apply_probability_calibrator(prob_1d: np.ndarray) -> np.ndarray:
         """
@@ -302,9 +302,7 @@ def ice_pdp_plot(
             out = np.asarray(cal.predict_proba(prob_1d))
             return out[:, 1] if out.ndim == 2 and out.shape[1] == 2 else _to_1d(out)
 
-        raise AttributeError(
-            "Calibrator must implement predict, transform, or predict_proba."
-        )
+        raise AttributeError("Calibrator must implement predict, transform, or predict_proba.")
 
     def get_calibrated(X_eval: np.ndarray) -> np.ndarray:
         """
@@ -320,9 +318,7 @@ def ice_pdp_plot(
         # Temperature scaling
         if method == "temperature" or hasattr(calibrator, "temperature"):
             if not hasattr(model, "predict_logits"):
-                raise AttributeError(
-                    "Temperature scaling requires model.predict_logits(X)."
-                )
+                raise AttributeError("Temperature scaling requires model.predict_logits(X).")
             logits = np.asarray(model.predict_logits(X_eval)).reshape(-1)
             return _to_1d(calibrator.predict_proba(logits))  # type: ignore
 

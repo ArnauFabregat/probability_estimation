@@ -1,9 +1,10 @@
-from typing import Literal, Union, Any
-from numpy.typing import ArrayLike, NDArray
-import numpy as np
+from typing import Any, Literal
 
-from src.calibration.platt_scaling import PlattCalibrator
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
 from src.calibration.isotonic_regression import IsotonicCalibrator
+from src.calibration.platt_scaling import PlattCalibrator
 from src.calibration.temperature_scaling import TemperatureScaler
 
 
@@ -51,7 +52,7 @@ class Calibrator:
 
     def fit(
         self,
-        X_val: Union[ArrayLike, Any],
+        X_val: ArrayLike | Any,
         y_val: ArrayLike,
     ) -> None:
         """
@@ -85,10 +86,7 @@ class Calibrator:
             # Pass raw logits to TemperatureScaler
             self.cal.fit(X_val, y_val)
 
-    def predict_proba(
-        self,
-        X: Union[ArrayLike, Any]
-    ) -> NDArray[np.float64]:
+    def predict_proba(self, X: ArrayLike | Any) -> NDArray[np.float64]:
         """
         Predict calibrated probabilities.
 

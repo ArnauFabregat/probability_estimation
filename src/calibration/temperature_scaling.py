@@ -1,10 +1,8 @@
-from typing import Union
 import numpy as np
-from numpy.typing import NDArray
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from numpy.typing import NDArray
 
 
 class TemperatureScaler(nn.Module):
@@ -45,9 +43,7 @@ class TemperatureScaler(nn.Module):
 
     def __init__(self, init_temp: float = 1.0) -> None:
         super().__init__()
-        self.log_T = nn.Parameter(
-            torch.tensor(float(np.log(init_temp)), dtype=torch.float32)
-        )
+        self.log_T = nn.Parameter(torch.tensor(float(np.log(init_temp)), dtype=torch.float32))
 
     @property
     def temperature(self) -> torch.Tensor:
@@ -63,8 +59,8 @@ class TemperatureScaler(nn.Module):
 
     def fit(
         self,
-        logits: Union[torch.Tensor, NDArray[np.float64], NDArray[np.float32]],
-        y: Union[torch.Tensor, NDArray[np.int_], NDArray[np.float32]],
+        logits: torch.Tensor | NDArray[np.float64] | NDArray[np.float32],
+        y: torch.Tensor | NDArray[np.int_] | NDArray[np.float32],
         max_iter: int = 50,
     ) -> None:
         """
@@ -99,10 +95,7 @@ class TemperatureScaler(nn.Module):
         y = y.view(-1)
 
         if logits.shape[0] != y.shape[0]:
-            raise ValueError(
-                f"logits and y must have same length. "
-                f"Got {logits.shape[0]} vs {y.shape[0]}."
-            )
+            raise ValueError(f"logits and y must have same length. Got {logits.shape[0]} vs {y.shape[0]}.")
 
         # Detach logits from computation graph
         logits = logits.detach()
@@ -121,7 +114,7 @@ class TemperatureScaler(nn.Module):
     @torch.no_grad()
     def predict_proba(
         self,
-        logits: Union[torch.Tensor, NDArray[np.float64], NDArray[np.float32]],
+        logits: torch.Tensor | NDArray[np.float64] | NDArray[np.float32],
     ) -> NDArray[np.float64]:
         """
         Predict calibrated probabilities from logits.

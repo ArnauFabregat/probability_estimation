@@ -1,7 +1,7 @@
 [project]
-name = "churn-probability-prediction"
+name = "probability-prediction"
 version = "0.1.0"
-description = "Open source project to build a churn probability prediction system in Python."
+description = "Open source project to build a probability prediction system in Python."
 readme = "README.md"
 requires-python = "==3.13.12"
 dependencies = [

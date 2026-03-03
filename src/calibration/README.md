@@ -12,8 +12,8 @@ The need for calibration becomes critical in two main scenarios:
     * **Neural Networks** often suffer from **overconfidence**, predicting probabilities near 100% even when the true accuracy is much lower.
 
 2. **Class Imbalance Compensation (Weighting):**
-    * When using parameters like `scale_pos_weight` (XGBoost) or `pos_weight` in `BCEWithLogitsLoss` (PyTorch) to handle imbalanced datasets, we artificially inflate the importance of the minority class. 
-    * While this improves the model's ability to separate classes (AUC), it **distorts the absolute probabilities**. The model will systematically over-predict the likelihood of the minority class. 
+    * When using parameters like `scale_pos_weight` (XGBoost) or `pos_weight` in `BCEWithLogitsLoss` (PyTorch) to handle imbalanced datasets, we artificially inflate the importance of the minority class.
+    * While this improves the model's ability to separate classes (AUC), it **distorts the absolute probabilities**. The model will systematically over-predict the likelihood of the minority class.
     * **Calibration acts as the "antidote"**, re-aligning these biased outputs with the real-world prevalence without losing the discriminative power gained from weighting.
     * Check: [Why Isotonic Regression Wins on Weighted Models](#why-isotonic-regression-wins-on-weighted-models)
 

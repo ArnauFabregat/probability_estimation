@@ -1,11 +1,8 @@
-from typing import Tuple
-import numpy as np
-from numpy.typing import ArrayLike
-
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-
+from numpy.typing import ArrayLike
 from sklearn.calibration import calibration_curve
 
 
@@ -141,7 +138,7 @@ def calibration_diagnostics(
     n_bins: int = 10,
     bins: int = 40,
     suptitle: str = "Calibration Diagnostics",
-) -> Tuple[Figure, tuple[Axes, Axes, Axes]]:
+) -> tuple[Figure, tuple[Axes, Axes, Axes]]:
     """
     Create a calibration diagnostic figure with three subplots:
 

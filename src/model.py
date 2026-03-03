@@ -1,5 +1,5 @@
-from typing import Optional
 import copy
+
 import numpy
 import torch
 import torch.nn as nn
@@ -49,10 +49,7 @@ class MonotonicLinear(nn.Module):
           weight = -softplus(raw_weight)
     """
 
-    def __init__(self,
-                 in_features: int,
-                 out_features: int,
-                 sign: str = "+") -> None:
+    def __init__(self, in_features: int, out_features: int, sign: str = "+") -> None:
         super().__init__()
 
         if sign not in {"+", "-"}:
@@ -63,9 +60,7 @@ class MonotonicLinear(nn.Module):
         self.sign = sign
 
         # Unconstrained raw weight; transformed via softplus in forward()
-        self.raw_weight = nn.Parameter(
-            torch.empty(out_features, in_features)
-        )
+        self.raw_weight = nn.Parameter(torch.empty(out_features, in_features))
 
         # Bias is unconstrained
         self.bias = nn.Parameter(torch.zeros(out_features))
@@ -132,14 +127,16 @@ class MonotonicNN(nn.Module):
     - Monotonicity is enforced at the layer level via `MonotonicLinear`.
     """
 
-    def __init__(self,
-                 all_variables: list[str],
-                 non_monotonic_vars: list[str] = [],
-                 positive_monotonic_vars: list[str] = [],
-                 negative_monotonic_vars: list[str] = [],
-                 hidden_non: int = 16,
-                 hidden_pos: int = 8,
-                 hidden_neg: int = 8) -> None:
+    def __init__(
+        self,
+        all_variables: list[str],
+        non_monotonic_vars: list[str] = [],
+        positive_monotonic_vars: list[str] = [],
+        negative_monotonic_vars: list[str] = [],
+        hidden_non: int = 16,
+        hidden_pos: int = 8,
+        hidden_neg: int = 8,
+    ) -> None:
         """
         Parameters
         ----------
@@ -173,24 +170,21 @@ class MonotonicNN(nn.Module):
         # Masks selecting the input columns for each branch
         if self.non_monotonic_vars:
             self.register_buffer(
-                "mask_non",
-                torch.tensor([name_to_idx[n] for n in self.non_monotonic_vars], dtype=torch.long)
+                "mask_non", torch.tensor([name_to_idx[n] for n in self.non_monotonic_vars], dtype=torch.long)
             )
         else:
             self.mask_non = None
 
         if self.positive_monotonic_vars:
             self.register_buffer(
-                "mask_pos",
-                torch.tensor([name_to_idx[n] for n in self.positive_monotonic_vars], dtype=torch.long)
+                "mask_pos", torch.tensor([name_to_idx[n] for n in self.positive_monotonic_vars], dtype=torch.long)
             )
         else:
             self.mask_pos = None
 
         if self.negative_monotonic_vars:
             self.register_buffer(
-                "mask_neg",
-                torch.tensor([name_to_idx[n] for n in self.negative_monotonic_vars], dtype=torch.long)
+                "mask_neg", torch.tensor([name_to_idx[n] for n in self.negative_monotonic_vars], dtype=torch.long)
             )
         else:
             self.mask_neg = None
@@ -198,11 +192,7 @@ class MonotonicNN(nn.Module):
         # Define hidden-layer branches (Linear layer only; tanh applied in forward)
         # Can add more layers if desired, but need to enforce constraints on all layers for monotonic branches
         self.lin_non = (
-            nn.Linear(
-                len(self.non_monotonic_vars),
-                hidden_non
-            )
-            if self.non_monotonic_vars and hidden_non > 0 else None
+            nn.Linear(len(self.non_monotonic_vars), hidden_non) if self.non_monotonic_vars and hidden_non > 0 else None
         )
         self.lin_pos = (
             MonotonicLinear(
@@ -210,7 +200,8 @@ class MonotonicNN(nn.Module):
                 out_features=hidden_pos,
                 sign="+",
             )
-            if self.positive_monotonic_vars and hidden_pos > 0 else None
+            if self.positive_monotonic_vars and hidden_pos > 0
+            else None
         )
         self.lin_neg = (
             MonotonicLinear(
@@ -218,7 +209,8 @@ class MonotonicNN(nn.Module):
                 out_features=hidden_neg,
                 sign="-",
             )
-            if self.negative_monotonic_vars and hidden_neg > 0 else None
+            if self.negative_monotonic_vars and hidden_neg > 0
+            else None
         )
 
         # Output layers – SUM of three logits
@@ -237,7 +229,6 @@ class MonotonicNN(nn.Module):
         - MonotonicLinear layers: initialize `.raw_weight` and `.bias`
         """
         for m in self.modules():
-
             # Standard Linear layers
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
@@ -303,14 +294,14 @@ class MonotonicNN(nn.Module):
         self,
         x_tr: torch.Tensor,
         y_tr: torch.Tensor,
-        x_val: Optional[torch.Tensor] = None,
-        y_val: Optional[torch.Tensor] = None,
+        x_val: torch.Tensor | None = None,
+        y_val: torch.Tensor | None = None,
         pos_weight: float = 1.0,
         epochs: int = 5,
         optimizer_params: OptimizerParams = OptimizerParams(),
         shuffle: bool = True,
         num_workers: int = 0,
-        device: str | torch.device = "cpu",   # "cuda" if available
+        device: str | torch.device = "cpu",  # "cuda" if available
         verbose: bool = True,
     ) -> dict[str, list[float]]:
         """
@@ -367,37 +358,30 @@ class MonotonicNN(nn.Module):
 
         dataset = torch.utils.data.TensorDataset(x_tr, y_tr)
         loader = torch.utils.data.DataLoader(
-            dataset,
-            batch_size=optimizer_params.batch_size,
-            shuffle=shuffle,
-            num_workers=num_workers
+            dataset, batch_size=optimizer_params.batch_size, shuffle=shuffle, num_workers=num_workers
         )
 
         # Optimizer
         optimizer = torch.optim.Adam(
-            self.parameters(),
-            lr=optimizer_params.lr,
-            weight_decay=optimizer_params.weight_decay
+            self.parameters(), lr=optimizer_params.lr, weight_decay=optimizer_params.weight_decay
         )
 
         # Initialize history dictionary
         history: dict[str, list[float]] = {"train_loss": [], "val_loss": []}
 
         # Early Stopping Variables
-        best_val_loss: float = float('inf')
+        best_val_loss: float = float("inf")
         epochs_no_improve: int = 0
         best_model_state = None
 
         # Use BCEWithLogitsLoss which combines a sigmoid layer and the BCELoss in one single class.
-        criterion = nn.BCEWithLogitsLoss(
-            pos_weight=torch.tensor([pos_weight], device=device)
-        )
+        criterion = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([pos_weight], device=device))
 
         for epoch in range(epochs):
             # --- Training Phase ---
             self.train()
             running_loss: float = 0.0
-            pbar = tqdm(loader, desc=f"Epoch {epoch+1}/{epochs}", unit="batch", leave=False)
+            pbar = tqdm(loader, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch", leave=False)
             for xb, yb in loader:
                 xb = xb.to(device).float()
                 yb = yb.to(device).float().view(-1, 1)
@@ -434,17 +418,17 @@ class MonotonicNN(nn.Module):
                     epochs_no_improve += 1
 
                 if verbose:
-                    print(f"Epoch {epoch+1} | Train: {avg_train_loss:.5f} | Val: {val_loss.item():.5f}")
+                    print(f"Epoch {epoch + 1} | Train: {avg_train_loss:.5f} | Val: {val_loss.item():.5f}")
 
                 if epochs_no_improve >= optimizer_params.patience:
                     if verbose:
-                        print(f"Early stopping triggered at epoch {epoch+1}")
+                        print(f"Early stopping triggered at epoch {epoch + 1}")
                     # Restore the best weights before exiting
                     self.load_state_dict(best_model_state)  # type: ignore
                     break
             else:
                 if verbose:
-                    print(f"Epoch {epoch+1} | Train loss: {avg_train_loss:.5f}")
+                    print(f"Epoch {epoch + 1} | Train loss: {avg_train_loss:.5f}")
 
         return history
 

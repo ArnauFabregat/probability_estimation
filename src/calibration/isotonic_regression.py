@@ -1,4 +1,3 @@
-from typing import Optional
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from sklearn.isotonic import IsotonicRegression
@@ -46,8 +45,8 @@ class IsotonicCalibrator:
 
     def __init__(
         self,
-        y_min: Optional[float] = None,
-        y_max: Optional[float] = None,
+        y_min: float | None = None,
+        y_max: float | None = None,
         increasing: bool = True,
         out_of_bounds: str = "clip",
     ) -> None:
@@ -80,8 +79,7 @@ class IsotonicCalibrator:
 
         if probs_arr.shape[0] != y_arr.shape[0]:
             raise ValueError(
-                f"`probs` and `y` must have the same length. "
-                f"Got {probs_arr.shape[0]} vs {y_arr.shape[0]}."
+                f"`probs` and `y` must have the same length. Got {probs_arr.shape[0]} vs {y_arr.shape[0]}."
             )
 
         self.iso.fit(probs_arr, y_arr)
