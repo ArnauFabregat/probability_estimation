@@ -1,3 +1,7 @@
+from typing import Literal, Union, Any
+from numpy.typing import ArrayLike, NDArray
+import numpy as np
+
 from src.calibration.platt_scaling import PlattCalibrator
 from src.calibration.isotonic_regression import IsotonicCalibrator
 from src.calibration.temperature_scaling import TemperatureScaler
@@ -5,62 +9,116 @@ from src.calibration.temperature_scaling import TemperatureScaler
 
 class Calibrator:
     """
-    Unified calibrator for:
-    - XGBoost
-    - Any sklearn-like model with predict_proba()
-    - PyTorch models with logits (for temperature scaling)
+    Unified probability calibrator supporting:
 
-    method: "platt", "isotonic", "temperature"
+    - **Platt scaling**
+    - **Isotonic regression**
+    - **Temperature scaling** (for neural networks / logits)
+
+    Parameters
+    ----------
+    method : {"platt", "isotonic", "temperature"}, default="platt"
+        Calibration technique to use.
+
+    Attributes
+    ----------
+    method : str
+        Selected calibration method.
+
+    cal : object
+        Underlying calibrator instance:
+        - `PlattCalibrator`
+        - `IsotonicCalibrator`
+        - `TemperatureScaler`
+
+    Notes
+    -----
+    - For *Platt* and *Isotonic*: inputs must be **probabilities** `p(y=1)`.
+    - For *Temperature scaling*: inputs must be **logits** from a neural network.
     """
 
-    def __init__(self, method="platt"):
+    def __init__(self, method: Literal["platt", "isotonic", "temperature"] = "platt") -> None:
         self.method = method
 
         if method == "platt":
             self.cal = PlattCalibrator()
         elif method == "isotonic":
-            self.cal = IsotonicCalibrator()
+            self.cal = IsotonicCalibrator()  # type: ignore
         elif method == "temperature":
-            self.cal = TemperatureScaler()
+            self.cal = TemperatureScaler()  # type: ignore
         else:
             raise ValueError("Unknown method: choose 'platt', 'isotonic', or 'temperature'")
 
-    def fit(self, X_val, y_val):
+    def fit(
+        self,
+        X_val: Union[ArrayLike, Any],
+        y_val: ArrayLike,
+    ) -> None:
         """
-        For Platt/Isotonic:
-            X_val = predicted probabilities
-        For Temperature scaling:
-            X_val = torch tensor inputs to NN
-        """
+        Fit the calibration model.
 
+        Parameters
+        ----------
+        X_val :
+            - For *Platt* and *Isotonic*: predicted probabilities.
+              Shape can be (n_samples,) or (n_samples, 2).
+            - For *Temperature scaling*: logits tensor (PyTorch).
+        y_val : array-like of shape (n_samples,)
+            Ground-truth binary labels.
+
+        Raises
+        ------
+        ValueError
+            If the method is unknown or inputs have invalid shape.
+        """
         if self.method in ("platt", "isotonic"):
-            # X_val must be raw probabilities from the base model
-            if X_val.ndim > 1:
-                raw_probs = X_val[:, 1]  # extract p(y=1)
+            X_val_arr = np.asarray(X_val)
+
+            if X_val_arr.ndim > 1:
+                raw_probs: NDArray[np.float64] = X_val_arr[:, 1].astype(float)
             else:
-                raw_probs = X_val
+                raw_probs = X_val_arr.astype(float)
 
             self.cal.fit(raw_probs, y_val)
 
         elif self.method == "temperature":
-            # Temperature scaling requires logits before sigmoid
+            # Pass raw logits to TemperatureScaler
             self.cal.fit(X_val, y_val)
 
-    def predict_proba(self, X):
+    def predict_proba(
+        self,
+        X: Union[ArrayLike, Any]
+    ) -> NDArray[np.float64]:
         """
-        For Platt/Isotonic:
-            X = raw probs from base model
-        For Temperature scaling:
-            X = features tensor to NN
+        Predict calibrated probabilities.
+
+        Parameters
+        ----------
+        X :
+            - For *Platt* and *Isotonic*: uncalibrated probabilities.
+            Shape (n_samples,) or (n_samples, 2).
+            - For *Temperature scaling*: logits tensor.
+
+        Returns
+        -------
+        calibrated : ndarray of shape (n_samples,)
+            Calibrated probabilities `p(y=1)`.
+
+        Notes
+        -----
+        The returned array is always converted to `float64`.
         """
         if self.method in ("platt", "isotonic"):
-            if X.ndim > 1:
-                raw_probs = X[:, 1]
+            X_arr = np.asarray(X)
+
+            if X_arr.ndim > 1:
+                raw_probs: NDArray[np.float64] = X_arr[:, 1].astype(float)
             else:
-                raw_probs = X
+                raw_probs = X_arr.astype(float)
 
             calibrated = self.cal.predict_proba(raw_probs)
-            return calibrated
+            return np.asarray(calibrated, dtype=float)
 
-        elif self.method == "temperature":
-            return self.cal.predict_proba(X)
+        else:
+            calibrated = self.cal.predict_proba(X)
+            return np.asarray(calibrated, dtype=float)
