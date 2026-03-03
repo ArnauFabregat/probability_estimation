@@ -4,7 +4,6 @@ import numpy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from tqdm import tqdm
 
 from src.schemas import OptimizerParams
 
@@ -381,7 +380,6 @@ class MonotonicNN(nn.Module):
             # --- Training Phase ---
             self.train()
             running_loss: float = 0.0
-            pbar = tqdm(loader, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch", leave=False)
             for xb, yb in loader:
                 xb = xb.to(device).float()
                 yb = yb.to(device).float().view(-1, 1)
@@ -393,7 +391,6 @@ class MonotonicNN(nn.Module):
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
-                pbar.set_postfix({"loss": f"{loss.item():.4f}"})
 
             avg_train_loss = running_loss / len(loader)
             history["train_loss"].append(avg_train_loss)
@@ -418,7 +415,8 @@ class MonotonicNN(nn.Module):
                     epochs_no_improve += 1
 
                 if verbose:
-                    print(f"Epoch {epoch + 1} | Train: {avg_train_loss:.5f} | Val: {val_loss.item():.5f}")
+                    print(f"Epoch {epoch + 1}/{epochs} | Train loss: {avg_train_loss:.4f} | "
+                          f"Val loss: {val_loss.item():.4f}")
 
                 if epochs_no_improve >= optimizer_params.patience:
                     if verbose:
@@ -428,7 +426,7 @@ class MonotonicNN(nn.Module):
                     break
             else:
                 if verbose:
-                    print(f"Epoch {epoch + 1} | Train loss: {avg_train_loss:.5f}")
+                    print(f"Epoch {epoch + 1}/{epochs} | Train loss: {avg_train_loss:.4f}")
 
         return history
 

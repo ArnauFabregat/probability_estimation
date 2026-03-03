@@ -133,7 +133,6 @@ Open a terminal in VSCode and execute the following command:
 
 ## TODO
 - Add classification metrics after the data exits the models: compare with probabilistic benchmark
-- Fix nn.fit prints format
-- Add more verbose or logger info/warning
 - Add deeper fine tunning with optuna
+- Add method to explore positive class weights
 - Explore adding more hidden layers to the NN
