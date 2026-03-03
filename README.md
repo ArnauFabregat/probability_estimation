@@ -134,7 +134,5 @@ Open a terminal in VSCode and execute the following command:
 - Add classification metrics after the data exits the models: compare with probabilistic benchmark
 - Fix nn.fit prints format
 - Add more verbose or logger info/warning
-- Add docstring and typing to code inside src
 - Add deeper fine tunning with optuna
 - Explore adding more hidden layers to the NN
-- Make isotonic regression compatible with the NN
