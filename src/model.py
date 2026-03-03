@@ -472,10 +472,19 @@ class MonotonicNN(nn.Module):
         return probs
 
     @torch.no_grad()
-    def predict_logits(self, x: numpy.ndarray) -> numpy.ndarray:
+    def predict_logits(self, x: numpy.ndarray) -> torch.Tensor:
         """
-        Return tensor of raw logits.
-        Required for temperature scaling.
+        Return tensor of raw logits required for temperature scaling.
+
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Input array of shape [N, d] containing N samples and d features.
+
+        Returns
+        -------
+        torch.Tensor
+            Raw logits belonging to the positive class for each sample.
         """
         self.eval()
         device = next(self.parameters()).device

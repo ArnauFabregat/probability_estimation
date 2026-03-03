@@ -1,13 +1,14 @@
-# type: ignore
+from typing import Tuple
 import numpy as np
+from numpy.typing import ArrayLike
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
 from typing import Optional, Sequence, Dict, Any
 from sklearn.metrics import brier_score_loss
 
 
-# TODO review - done with vibe coding
-def get_best_f1(y_true, y_proba, num_thresholds=200):
+def get_best_f1(y_true: ArrayLike, y_proba: ArrayLike, num_thresholds: int = 200
+                ) -> Tuple[float, float, np.ndarray, np.ndarray]:
     """
     Computes the optimal F1 score by sweeping probability thresholds.
 
@@ -36,53 +37,76 @@ def get_best_f1(y_true, y_proba, num_thresholds=200):
     thresholds : list of floats
         Tested thresholds (same length as f1_curve)
     """
+    # Normalize inputs
+    y_true_arr = np.asarray(y_true).astype(int).reshape(-1)
+    y_proba_arr = np.asarray(y_proba, dtype=float).reshape(-1)
 
-    y_true = np.asarray(y_true).astype(int)
-    y_proba = np.asarray(y_proba).reshape(-1)
+    thresholds: np.ndarray = np.linspace(0.0, 1.0, num_thresholds, dtype=float)
+    f1_curve: np.ndarray = np.empty(num_thresholds, dtype=float)
 
-    thresholds = np.linspace(0, 1, num_thresholds)
-    f1_curve = []
+    for i in range(num_thresholds):
+        t = thresholds[i]
+        preds = (y_proba_arr >= t).astype(int)
+        f1_curve[i] = float(f1_score(y_true_arr, preds))
 
-    for t in thresholds:
-        preds = (y_proba >= t).astype(int)
-        f1_curve.append(f1_score(y_true, preds))
-
-    f1_curve = np.array(f1_curve)
-    best_idx = np.argmax(f1_curve)
-
-    best_threshold = thresholds[best_idx]
-    best_f1 = f1_curve[best_idx]
+    best_idx = int(np.argmax(f1_curve))
+    best_threshold: float = float(thresholds[best_idx])
+    best_f1: float = float(f1_curve[best_idx])
 
     return best_threshold, best_f1, f1_curve, thresholds
 
 
-def calculate_brier_metrics(y_true, y_probs):
+def calculate_brier_metrics(y_true: ArrayLike, y_proba: ArrayLike) -> Tuple[float, float, float, float]:
     """
-    Calcula el BS del model, el BS de referència (baseline) i el Brier Skill Score.
+    Computes Brier-based calibration metrics: model Brier Score, baseline Brier Score,
+    Brier Skill Score (BSS), and prevalence.
+
+    The Brier Score (BS) is the mean squared error between predicted probabilities and
+    binary outcomes. The baseline BS is computed using a naive model that always predicts
+    the prevalence (mean of y_true). The Brier Skill Score compares the model to this
+    baseline: BSS = 1 - (BS_model / BS_baseline).
+
+    Parameters
+    ----------
+    y_true : array-like of shape (n_samples,)
+        Ground-truth binary labels (0/1).
+
+    y_proba : array-like of shape (n_samples,)
+        Predicted probabilities (values in [0, 1]) for the positive class.
+
+    Returns
+    -------
+    bs_model : float
+        Brier Score of the model (lower is better).
+
+    bs_baseline : float
+        Brier Score of the baseline model that predicts the prevalence for every sample.
+
+    bss : float
+        Brier Skill Score. Values:
+            - > 0 : model outperforms the baseline
+            - = 0 : model matches the baseline
+            - < 0 : model underperforms the baseline
+            - = 1 : perfect model (theoretical upper bound)
+
+    prevalence : float
+        The positive-class prevalence in `y_true` (mean of y_true).
     """
-    # 1. Brier Score del teu model
-    bs_model = brier_score_loss(y_true, y_probs)
+    # Normalize inputs to arrays with concrete dtypes
+    y_true_arr = np.asarray(y_true).astype(int).reshape(-1)
+    y_probs_arr = np.asarray(y_proba, dtype=float).reshape(-1)
 
-    # 2. Brier Score Baseline (el model "tonto" que diu sempre la mitjana)
-    # La millor constant és la prevalença del conjunt on estàs testejant
-    prevalence = np.mean(y_true)
-    baseline_probs = np.full_like(y_true, fill_value=prevalence, dtype=float)
-    bs_baseline = brier_score_loss(y_true, baseline_probs)
+    bs_model: float = float(brier_score_loss(y_true_arr, y_probs_arr))
+    prevalence: float = float(np.mean(y_true_arr))
+    baseline_probs = np.full_like(y_probs_arr, fill_value=prevalence, dtype=float)
+    bs_baseline: float = float(brier_score_loss(y_true_arr, baseline_probs))
 
-    # 3. Brier Skill Score (BSS)
-    # Si BSS > 0, el model és millor que l'atzar.
-    # Si BSS = 1, el model és perfecte.
-    if bs_baseline == 0:  # Cas teòric sense variància
-        bss = 0.0
+    if bs_baseline == 0:
+        bss: float = 0.0
     else:
-        bss = 1 - (bs_model / bs_baseline)
+        bss = 1.0 - (bs_model / bs_baseline)
 
-    return {
-        "bs_model": bs_model,
-        "bs_baseline": bs_baseline,
-        "bss": bss,
-        "prevalence": prevalence
-    }
+    return bs_model, bs_baseline, bss, prevalence
 
 
 def ice_pdp_plot_xgb_or_nn(
