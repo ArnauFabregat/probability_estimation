@@ -14,26 +14,27 @@ The goal is to provide accurate, interpretable, and business‑consistent probab
 
 ## Table of Contents
 
-1. [How to Run](#how-to-run)
-2. [Data Sources](#data-sources)
-3. [Code Quality & Documentation](#code-quality--documentation)
+1. [Data Sources](#data-sources)
+2. [Code Quality & Documentation](#code-quality--documentation)
     - [Pre-commit Hooks](#pre-commit-hooks)
     - [Unit Testing](#unit-testing)
     - [Peer Review](#peer-review)
-4. [Virtual Environment](#virtual-environment)
+3. [Virtual Environment](#virtual-environment)
     - [Create a new virtualenv with the project's dependencies](#create-a-new-virtualenv-with-the-projects-dependencies)
     - [Checking if the project's virtual environment is active](#checking-if-the-projects-virtual-environment-is-active)
     - [Updating the project's dependencies](#updating-the-projects-dependencies)
-5. [TODO](#todo)
-
-
-## How to Run
-
-TBD
+4. [TODO](#todo)
 
 ## Data Sources
-The project uses this toy dataset:
-- Customer churn dataset: https://mavenanalytics.io/data-playground/bank-customer-churn
+The project uses these toy datasets:
+- [Customer churn dataset](https://mavenanalytics.io/data-playground/bank-customer-churn)
+- [Sklearn Breast cancer dataset](https://scikit-learn.org/stable/datasets/toy_dataset.html#breast-cancer-dataset)
+
+Interesting churn datasets to explore and force related price features:
+- [Price sensitivity & churn](https://www.kaggle.com/code/alyassi/price-sensitivity-churn)
+- [Customer Churn & Segmentation Dataset](https://www.kaggle.com/datasets/efeyldz/customer-churn-and-segmentation-dataset-synthetic)
+- [Mobile Customer Churn Dataset](https://www.kaggle.com/datasets/dyutidasmahaptra/mobile-customer-churn-dataset)
+- [Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
 
 ## Code Quality & Documentation
 ### Pre-commit Hooks
