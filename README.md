@@ -3,7 +3,7 @@ This repository explores monotonic machine‑learning models for probability est
 - Tree‑based monotonic classifiers (e.g., monotonic XGBoost, LightGBM constraints)
 - A custom PyTorch Monotonic Neural Network architecture using constrained linear layers
 
-The project focuses on building models where feature–response relationships follow known business logic (e.g., more products → lower churn). It includes:
+The project focuses on building models where feature–response relationships follow known business logic (e.g., lower price → lower churn). It includes:
 
 - Probability calibration (Platt scaling, isotonic, temperature scaling)
 - Feature‑level sensitivity via ICE curves (Individual Conditional Expectation)
@@ -133,7 +133,6 @@ Open a terminal in VSCode and execute the following command:
 
 ## TODO
 - Add classification metrics after the data exits the models: compare with probabilistic benchmark
-- Fix nn.fit prints format
-- Add more verbose or logger info/warning
 - Add deeper fine tunning with optuna
+- Add method to explore positive class weights
 - Explore adding more hidden layers to the NN
