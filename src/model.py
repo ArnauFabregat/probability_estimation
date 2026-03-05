@@ -4,6 +4,7 @@ import numpy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.metrics import log_loss
 
 from src.schemas import OptimizerParams
 
@@ -473,3 +474,68 @@ class MonotonicNN(nn.Module):
         x_t = torch.from_numpy(x).float().to(device)
         logits = self.forward(x_t)
         return logits
+
+    def permutation_importance(
+        self,
+        X: numpy.ndarray,
+        y: numpy.ndarray,
+        n_repeats: int = 5,
+        device: str | torch.device = "cpu",
+        seed: int = 42,
+    ) -> numpy.ndarray:
+        """
+        Compute permutation feature importance using log-loss.
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Input data of shape (N, d), standardized.
+        y : numpy.ndarray
+            Binary targets of shape (N,).
+        n_repeats : int, default=5
+            Number of random shuffles per feature.
+        device : str or torch.device, default="cpu"
+            Device where the model is located.
+        seed : int, default=42
+            RNG seed for reproducibility.
+
+        Returns
+        -------
+        numpy.ndarray
+            Importance scores of shape (d,), where higher = more important.
+        """
+        self.eval()
+        self.to(device)
+
+        rng = numpy.random.default_rng(seed)
+        X = numpy.asarray(X)
+        y = numpy.asarray(y)
+
+        # Helper for predicting probabilities
+        @torch.no_grad()
+        def _predict_prob(X_batch: numpy.ndarray) -> numpy.ndarray:
+            X_t = torch.tensor(X_batch, dtype=torch.float32, device=device)
+            logits = self.forward(X_t)
+            probs = torch.sigmoid(logits).cpu().numpy().ravel()
+            return probs
+
+        # Baseline loss
+        baseline_pred = _predict_prob(X)
+        baseline_loss = log_loss(y, baseline_pred)
+
+        n_features = X.shape[1]
+        importances = numpy.zeros(n_features)
+
+        # Permutation loop
+        for j in range(n_features):
+            losses = []
+            for _ in range(n_repeats):
+                X_perm = X.copy()
+                rng.shuffle(X_perm[:, j])   # reproducible permutation
+                perm_pred = _predict_prob(X_perm)
+                loss = log_loss(y, perm_pred)
+                losses.append(loss - baseline_loss)
+
+            importances[j] = numpy.mean(losses)
+
+        return importances
