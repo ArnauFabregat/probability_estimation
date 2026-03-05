@@ -412,3 +412,34 @@ def ice_pdp_plot(
         "sample_idx": sample_idx,
         "used_standardized": use_standardized_for_model,
     }
+
+
+def plot_feature_importance(importances, feature_names):
+    """
+    Plot permutation feature importance as a sorted horizontal bar chart.
+
+    Parameters
+    ----------
+    importances : array-like (d,)
+        Importance scores for each feature.
+
+    feature_names : list of str
+        Names of the features, same length as importances.
+    """
+
+    importances = np.asarray(importances)
+    feature_names = np.asarray(feature_names)
+
+    # Sort from most important to least
+    idx = np.argsort(importances)[::-1]
+    sorted_imp = importances[idx]
+    sorted_names = feature_names[idx]
+
+    plt.figure(figsize=(10, 6))
+    _ = plt.barh(sorted_names, sorted_imp, color="steelblue")
+    plt.xlabel("Increase in Log-Loss When Feature is Permuted")
+    plt.title("Permutation Feature Importance (Log-Loss)")
+    plt.gca().invert_yaxis()  # Most important at the top
+    plt.grid(axis="x", alpha=0.3)
+    plt.tight_layout()
+    plt.show()
