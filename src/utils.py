@@ -4,7 +4,132 @@ from typing import Any, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
-from sklearn.metrics import brier_score_loss, f1_score
+from sklearn.metrics import brier_score_loss, f1_score, confusion_matrix, precision_recall_fscore_support
+
+
+def stochastic_baseline(
+    N: int = 100, p: float = 0.3, seed: int = 42, verbose: bool = True
+) -> tuple[np.ndarray, float, float, float]:
+    """
+    Generate predictions from a stochastic no-skill classifier for a binary classification task.
+
+    Description:
+    ------------
+    This classifier predicts class 1 independently for each sample with probability q = p,
+    where p is the prevalence of class 1 in the dataset. This corresponds to the expected
+    performance of a model that knows only the marginal class distribution and predicts
+    labels by random sampling.
+
+    Parameters:
+    -----------
+    N : int
+        Number of samples.
+    p : float
+        Proportion of class 1 in the data (0 < p < 1).
+    seed : int
+        Random seed to ensure reproducibility.
+    verbose : bool
+        If True, print the confusion matrix and metrics.
+
+    Returns:
+    --------
+    cm : np.ndarray
+        Confusion matrix: [[TN, FP], [FN, TP]]
+    precision : float
+        Precision for class 1.
+    recall : float
+        Recall for class 1.
+    f1 : float
+        F1-score for class 1.
+    """
+    np.random.seed(seed)
+
+    # Robust probability handling
+    p = float(p)
+    p = np.clip(p, 0.0, 1.0)  # avoid floating point drift
+    q = p
+    probs_true = np.array([p, 1 - p])
+    probs_pred = np.array([q, 1 - q])
+    probs_true /= probs_true.sum()
+    probs_pred /= probs_pred.sum()
+
+    # Ground truth
+    y_true = np.random.choice([1, 0], size=N, p=probs_true)
+
+    # Predictions
+    y_pred = np.random.choice([1, 0], size=N, p=probs_pred)
+
+    # Metrics
+    cm = confusion_matrix(y_true, y_pred)
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, average='binary'
+    )
+
+    if verbose:
+        print("=== STOCHASTIC BASELINE ===")
+        print("Confusion matrix:\n", cm)
+        print(f"Precision={precision:.3f}, Recall={recall:.3f}, F1={f1:.3f}\n")
+
+    return cm, precision, recall, f1
+
+
+def deterministic_baseline(
+    N: int = 100, p: float = 0.3, verbose: bool = True
+) -> tuple[np.ndarray, float, float, float]:
+    """
+    Compute the confusion matrix and F1-score for a deterministic no-skill classifier.
+
+    Description:
+    ------------
+    This baseline classifier predicts class 1 for all samples. In binary classification,
+    this corresponds to the thresholding behavior of a model that outputs the same fixed
+    probability score equal to class prevalence p, and applies a threshold t <= p.
+
+    This strategy gives the maximum possible F1-score achievable by a classifier that
+    only knows the prevalence of class 1, not the features.
+
+    Parameters:
+    -----------
+    N : int
+        Number of samples.
+    p : float
+        Proportion of class 1 in the data.
+    verbose : bool
+        If True, print the confusion matrix and metrics.
+
+    Returns:
+    --------
+    cm : np.ndarray
+        Confusion matrix.
+    precision : float
+        Precision for class 1.
+    recall : float
+        Recall for class 1.
+    f1 : float
+        F1-score for class 1.
+    """
+    # Compute exact number of samples per class
+    pos = int(round(N * p))
+    neg = N - pos
+
+    # Ground truth length guaranteed to be N
+    y_true = np.array([1] * pos + [0] * neg)
+
+    # Predictions (all class 1)
+    y_pred = np.ones(N)
+
+    # Metrics
+    cm = confusion_matrix(y_true, y_pred)
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, average='binary'
+    )
+
+    if verbose:
+        print("\n=== DETERMINISTIC BASELINE ===")
+        print("Confusion matrix:\n", cm)
+        print(f"Precision={precision:.3f}, Recall={recall:.3f}, F1={f1:.3f}")
+
+    return cm, precision, recall, f1
 
 
 def get_best_f1(
@@ -414,7 +539,7 @@ def ice_pdp_plot(
     }
 
 
-def plot_feature_importance(importances, feature_names):
+def plot_feature_importance(importances: np.ndarray, feature_names: list[str]) -> None:
     """
     Plot permutation feature importance as a sorted horizontal bar chart.
 
