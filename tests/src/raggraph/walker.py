@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import networkx as nx
 
-from src.parser import CodeGraphBuilder1, CodeGraphBuilder2
+from src.raggraph.parserraggraph.parser import CodeGraphBuilder1, CodeGraphBuilder2
 
 # ------------------------------------------------------------
 # Directory walker
