@@ -8,10 +8,10 @@
   <key id="d1" for="node" attr.name="name" attr.type="string" />
   <key id="d0" for="node" attr.name="type" attr.type="string" />
   <graph edgedefault="directed">
-    <node id="../src\model.py">
+    <node id="../src/model.py">
       <data key="d0">file</data>
       <data key="d1">model.py</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">import copy
@@ -557,10 +557,10 @@ class MonotonicNN(nn.Module):
         return importances
 </data>
     </node>
-    <node id="../src\model.py::class::MonotonicLinear">
+    <node id="../src/model.py::class::MonotonicLinear">
       <data key="d0">class</data>
       <data key="d1">MonotonicLinear</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">MonotonicLinear</data>
       <data key="d4">A linear layer with monotonicity constraints enforced through
 softplus-based weight reparameterization.
@@ -679,10 +679,10 @@ Notes
         # Linear transformation: y = xW^T + b
         return x @ weight.T + self.bias</data>
     </node>
-    <node id="../src\model.py::method::MonotonicLinear.__init__">
+    <node id="../src/model.py::method::MonotonicLinear.__init__">
       <data key="d0">method</data>
       <data key="d1">MonotonicLinear.__init__</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def __init__(self, in_features: int, out_features: int, sign: str) -&gt; None</data>
       <data key="d4">None</data>
       <data key="d5">def __init__(self, in_features: int, out_features: int, sign: str = "+") -&gt; None:
@@ -701,10 +701,10 @@ Notes
         # Bias is unconstrained
         self.bias = nn.Parameter(torch.zeros(out_features))</data>
     </node>
-    <node id="../src\model.py::method::MonotonicLinear.forward">
+    <node id="../src/model.py::method::MonotonicLinear.forward">
       <data key="d0">method</data>
       <data key="d1">MonotonicLinear.forward</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def forward(self, x: torch.Tensor) -&gt; torch.Tensor</data>
       <data key="d4">Apply monotonic linear transformation to input.
 
@@ -742,10 +742,10 @@ torch.Tensor:
         # Linear transformation: y = xW^T + b
         return x @ weight.T + self.bias</data>
     </node>
-    <node id="../src\model.py::class::MonotonicNN">
+    <node id="../src/model.py::class::MonotonicNN">
       <data key="d0">class</data>
       <data key="d1">MonotonicNN</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">MonotonicNN</data>
       <data key="d4">Monotonic neural network with three optional branches enforcing different
 monotonicity behaviors over subsets of input variables.
@@ -1228,10 +1228,10 @@ Notes
 
         return importances</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.__init__">
+    <node id="../src/model.py::method::MonotonicNN.__init__">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.__init__</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def __init__(self, all_variables: list[str], non_monotonic_vars: list[str], positive_monotonic_vars: list[str], negative_monotonic_vars: list[str], hidden_non: int, hidden_pos: int, hidden_neg: int) -&gt; None</data>
       <data key="d4">Parameters
 ----------
@@ -1344,10 +1344,10 @@ hidden_non, hidden_pos, hidden_neg : int
         # Initialize weights (Xavier uniform)
         self._init_weights()</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN._init_weights">
+    <node id="../src/model.py::method::MonotonicNN._init_weights">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN._init_weights</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def _init_weights(self) -&gt; None</data>
       <data key="d4">Initialize weights using Xavier uniform initialization for all layers.
 
@@ -1373,10 +1373,10 @@ hidden_non, hidden_pos, hidden_neg : int
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.forward">
+    <node id="../src/model.py::method::MonotonicNN.forward">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.forward</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def forward(self, x: torch.Tensor) -&gt; torch.Tensor</data>
       <data key="d4">Forward pass of the monotonic neural network.
 
@@ -1455,10 +1455,10 @@ torch.Tensor
 
         return total_logit</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.fit">
+    <node id="../src/model.py::method::MonotonicNN.fit">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.fit</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def fit(self, x_tr: torch.Tensor, y_tr: torch.Tensor, x_val: torch.Tensor | None, y_val: torch.Tensor | None, pos_weight: float, epochs: int, optimizer_params: OptimizerParams, shuffle: bool, num_workers: int, device: str | torch.device, verbose: bool) -&gt; dict[str, list[float]]</data>
       <data key="d4">Train the model using minibatch gradient descent with optional validation
 and early stopping.
@@ -1645,10 +1645,10 @@ dict[str, list[float]]
 
         return history</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.predict_proba">
+    <node id="../src/model.py::method::MonotonicNN.predict_proba">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.predict_proba</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def predict_proba(self, x: numpy.ndarray) -&gt; numpy.ndarray</data>
       <data key="d4">Evaluate the model and return predicted probabilities.
 
@@ -1683,10 +1683,10 @@ numpy.ndarray
         probs = torch.sigmoid(logits).cpu().numpy()
         return probs</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.predict_logits">
+    <node id="../src/model.py::method::MonotonicNN.predict_logits">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.predict_logits</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def predict_logits(self, x: numpy.ndarray) -&gt; torch.Tensor</data>
       <data key="d4">Return tensor of raw logits required for temperature scaling.
 
@@ -1719,10 +1719,10 @@ torch.Tensor
         logits = self.forward(x_t)
         return logits</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN.permutation_importance">
+    <node id="../src/model.py::method::MonotonicNN.permutation_importance">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN.permutation_importance</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def permutation_importance(self, X: numpy.ndarray, y: numpy.ndarray, n_repeats: int, device: str | torch.device, seed: int) -&gt; numpy.ndarray</data>
       <data key="d4">Compute permutation feature importance using log-loss.
 
@@ -1808,10 +1808,10 @@ numpy.ndarray
 
         return importances</data>
     </node>
-    <node id="../src\model.py::method::MonotonicNN._predict_prob">
+    <node id="../src/model.py::method::MonotonicNN._predict_prob">
       <data key="d0">method</data>
       <data key="d1">MonotonicNN._predict_prob</data>
-      <data key="d2">../src\model.py</data>
+      <data key="d2">../src/model.py</data>
       <data key="d3">def _predict_prob(X_batch: numpy.ndarray) -&gt; numpy.ndarray</data>
       <data key="d4">None</data>
       <data key="d5">def _predict_prob(X_batch: numpy.ndarray) -&gt; numpy.ndarray:
@@ -1820,10 +1820,10 @@ numpy.ndarray
             probs = torch.sigmoid(logits).cpu().numpy().ravel()
             return probs</data>
     </node>
-    <node id="../src\schemas.py">
+    <node id="../src/schemas.py">
       <data key="d0">file</data>
       <data key="d1">schemas.py</data>
-      <data key="d2">../src\schemas.py</data>
+      <data key="d2">../src/schemas.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">from pydantic import BaseModel, Field, PositiveFloat, PositiveInt
@@ -1862,10 +1862,10 @@ class OptimizerParams(BaseModel):
     min_delta: float = 1e-4
 </data>
     </node>
-    <node id="../src\schemas.py::class::OptimizerParams">
+    <node id="../src/schemas.py::class::OptimizerParams">
       <data key="d0">class</data>
       <data key="d1">OptimizerParams</data>
-      <data key="d2">../src\schemas.py</data>
+      <data key="d2">../src/schemas.py</data>
       <data key="d3">OptimizerParams</data>
       <data key="d4">Hyperparameters used to configure the optimizer and early‑stopping
 behavior during training.
@@ -1921,10 +1921,10 @@ min_delta : float, default=1e-4
     patience: PositiveInt = 10
     min_delta: float = 1e-4</data>
     </node>
-    <node id="../src\utils.py">
+    <node id="../src/utils.py">
       <data key="d0">file</data>
       <data key="d1">utils.py</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">from collections.abc import Sequence
@@ -2499,10 +2499,10 @@ def plot_feature_importance(importances: np.ndarray, feature_names: list[str]) -
     plt.show()
 </data>
     </node>
-    <node id="../src\utils.py::function::stochastic_baseline">
+    <node id="../src/utils.py::function::stochastic_baseline">
       <data key="d0">function</data>
       <data key="d1">stochastic_baseline</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def stochastic_baseline(N: int, p: float, seed: int, verbose: bool) -&gt; tuple[np.ndarray, float, float, float]</data>
       <data key="d4">Generate predictions from a stochastic no-skill classifier for a binary classification task.
 
@@ -2599,10 +2599,10 @@ f1 : float
 
     return cm, precision, recall, f1</data>
     </node>
-    <node id="../src\utils.py::function::deterministic_baseline">
+    <node id="../src/utils.py::function::deterministic_baseline">
       <data key="d0">function</data>
       <data key="d1">deterministic_baseline</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def deterministic_baseline(N: int, p: float, verbose: bool) -&gt; tuple[np.ndarray, float, float, float]</data>
       <data key="d4">Compute the confusion matrix and F1-score for a deterministic no-skill classifier.
 
@@ -2692,10 +2692,10 @@ f1 : float
 
     return cm, precision, recall, f1</data>
     </node>
-    <node id="../src\utils.py::function::get_best_f1">
+    <node id="../src/utils.py::function::get_best_f1">
       <data key="d0">function</data>
       <data key="d1">get_best_f1</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def get_best_f1(y_true: ArrayLike, y_proba: ArrayLike, num_thresholds: int) -&gt; tuple[float, float, np.ndarray, np.ndarray]</data>
       <data key="d4">Computes the optimal F1 score by sweeping probability thresholds.
 
@@ -2772,10 +2772,10 @@ thresholds : list of floats
 
     return best_threshold, best_f1, f1_curve, thresholds</data>
     </node>
-    <node id="../src\utils.py::function::calculate_brier_metrics">
+    <node id="../src/utils.py::function::calculate_brier_metrics">
       <data key="d0">function</data>
       <data key="d1">calculate_brier_metrics</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def calculate_brier_metrics(y_true: ArrayLike, y_proba: ArrayLike) -&gt; tuple[float, float, float, float]</data>
       <data key="d4">Computes Brier-based calibration metrics: model Brier Score, baseline Brier Score,
 Brier Skill Score (BSS), and prevalence.
@@ -2862,10 +2862,10 @@ prevalence : float
 
     return bs_model, bs_baseline, bss, prevalence</data>
     </node>
-    <node id="../src\utils.py::function::ice_pdp_plot">
+    <node id="../src/utils.py::function::ice_pdp_plot">
       <data key="d0">function</data>
       <data key="d1">ice_pdp_plot</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def ice_pdp_plot(model: object, X_std: np.ndarray, X_raw: np.ndarray, feature_name: str, all_vars: Sequence[str], num_points: int, n_samples: int | None, mode: Literal['ice', 'pdp', 'both'], calibrator: object | None, figsize: tuple[int, int], random_state: int, grid_percentiles: tuple[float, float], model_input_space: Literal['auto', 'raw', 'standardized']) -&gt; dict[str, Any]</data>
       <data key="d4">Generate ICE (Individual Conditional Expectation) and PDP (Partial Dependence Plot)
 curves for a given feature, supporting both **raw** and **standardized** model
@@ -3238,10 +3238,10 @@ Dict[str, Any]
         "used_standardized": use_standardized_for_model,
     }</data>
     </node>
-    <node id="../src\utils.py::function::is_temperature_scaler">
+    <node id="../src/utils.py::function::is_temperature_scaler">
       <data key="d0">function</data>
       <data key="d1">is_temperature_scaler</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def is_temperature_scaler(cal: object | None) -&gt; bool</data>
       <data key="d4">Return True if calibrator behaves like a temperature scaler.</data>
       <data key="d5">def is_temperature_scaler(cal: object | None) -&gt; bool:
@@ -3253,10 +3253,10 @@ Dict[str, Any]
             return True
         return hasattr(cal, "temperature")</data>
     </node>
-    <node id="../src\utils.py::function::_to_1d">
+    <node id="../src/utils.py::function::_to_1d">
       <data key="d0">function</data>
       <data key="d1">_to_1d</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def _to_1d(a: np.ndarray) -&gt; np.ndarray</data>
       <data key="d4">Ensure an array is flattened into shape (n,).</data>
       <data key="d5">def _to_1d(a: np.ndarray) -&gt; np.ndarray:
@@ -3266,10 +3266,10 @@ Dict[str, Any]
             return a.ravel()
         return a.reshape(-1)</data>
     </node>
-    <node id="../src\utils.py::function::get_raw_probs">
+    <node id="../src/utils.py::function::get_raw_probs">
       <data key="d0">function</data>
       <data key="d1">get_raw_probs</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def get_raw_probs(X_eval: np.ndarray) -&gt; np.ndarray</data>
       <data key="d4">Return model probabilities P(y=1) for X_eval.
 Supports:
@@ -3293,10 +3293,10 @@ Supports:
 
         raise AttributeError("Model must implement predict_proba(X) or predict(X) returning probabilities.")</data>
     </node>
-    <node id="../src\utils.py::function::_apply_probability_calibrator">
+    <node id="../src/utils.py::function::_apply_probability_calibrator">
       <data key="d0">function</data>
       <data key="d1">_apply_probability_calibrator</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def _apply_probability_calibrator(prob_1d: np.ndarray) -&gt; np.ndarray</data>
       <data key="d4">Apply a probability calibrator to 1‑D probability input.
 Supports: .predict, .transform, .predict_proba.</data>
@@ -3320,10 +3320,10 @@ Supports: .predict, .transform, .predict_proba.</data>
 
         raise AttributeError("Calibrator must implement predict, transform, or predict_proba.")</data>
     </node>
-    <node id="../src\utils.py::function::get_calibrated">
+    <node id="../src/utils.py::function::get_calibrated">
       <data key="d0">function</data>
       <data key="d1">get_calibrated</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def get_calibrated(X_eval: np.ndarray) -&gt; np.ndarray</data>
       <data key="d4">Return calibrated probabilities.
 Temperature scaling → requires model.predict_logits.
@@ -3350,10 +3350,10 @@ Isotonic / Platt → calibrates probabilities.</data>
         p_raw = get_raw_probs(X_eval)
         return _apply_probability_calibrator(p_raw)</data>
     </node>
-    <node id="../src\utils.py::function::plot_feature_importance">
+    <node id="../src/utils.py::function::plot_feature_importance">
       <data key="d0">function</data>
       <data key="d1">plot_feature_importance</data>
-      <data key="d2">../src\utils.py</data>
+      <data key="d2">../src/utils.py</data>
       <data key="d3">def plot_feature_importance(importances: np.ndarray, feature_names: list[str]) -&gt; None</data>
       <data key="d4">Plot permutation feature importance as a sorted horizontal bar chart.
 
@@ -3394,10 +3394,10 @@ feature_names : list of str
     plt.tight_layout()
     plt.show()</data>
     </node>
-    <node id="../src\calibration\calibration_plots.py">
+    <node id="../src/calibration/calibration_plots.py">
       <data key="d0">file</data>
       <data key="d1">calibration_plots.py</data>
-      <data key="d2">../src\calibration\calibration_plots.py</data>
+      <data key="d2">../src/calibration/calibration_plots.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">import matplotlib.pyplot as plt
@@ -3587,10 +3587,10 @@ def calibration_diagnostics(
     return fig, axes_tuple
 </data>
     </node>
-    <node id="../src\calibration\calibration_plots.py::function::plot_calibration_curves_ax">
+    <node id="../src/calibration/calibration_plots.py::function::plot_calibration_curves_ax">
       <data key="d0">function</data>
       <data key="d1">plot_calibration_curves_ax</data>
-      <data key="d2">../src\calibration\calibration_plots.py</data>
+      <data key="d2">../src/calibration/calibration_plots.py</data>
       <data key="d3">def plot_calibration_curves_ax(ax: Axes, y_true: ArrayLike, raw_probs: ArrayLike, cal_probs: ArrayLike, n_bins: int) -&gt; None</data>
       <data key="d4">Plot raw vs calibrated calibration curves on the provided Matplotlib Axes.
 
@@ -3661,10 +3661,10 @@ None
     ax.grid(True, alpha=0.3)
     ax.legend(frameon=False)</data>
     </node>
-    <node id="../src\calibration\calibration_plots.py::function::plot_histograms_ax">
+    <node id="../src/calibration/calibration_plots.py::function::plot_histograms_ax">
       <data key="d0">function</data>
       <data key="d1">plot_histograms_ax</data>
-      <data key="d2">../src\calibration\calibration_plots.py</data>
+      <data key="d2">../src/calibration/calibration_plots.py</data>
       <data key="d3">def plot_histograms_ax(ax: Axes, raw_probs: ArrayLike, cal_probs: ArrayLike, bins: int) -&gt; None</data>
       <data key="d4">Plot probability distributions (histograms) for raw and calibrated probabilities.
 
@@ -3718,10 +3718,10 @@ None</data>
     ax.legend(frameon=False)
     ax.grid(True, alpha=0.3)</data>
     </node>
-    <node id="../src\calibration\calibration_plots.py::function::plot_raw_vs_calibrated_ax">
+    <node id="../src/calibration/calibration_plots.py::function::plot_raw_vs_calibrated_ax">
       <data key="d0">function</data>
       <data key="d1">plot_raw_vs_calibrated_ax</data>
-      <data key="d2">../src\calibration\calibration_plots.py</data>
+      <data key="d2">../src/calibration/calibration_plots.py</data>
       <data key="d3">def plot_raw_vs_calibrated_ax(ax: Axes, raw_probs: ArrayLike, cal_probs: ArrayLike) -&gt; None</data>
       <data key="d4">Plot a scatter comparison of raw vs calibrated probabilities.
 
@@ -3773,10 +3773,10 @@ None</data>
     ax.set_ylim(0, 1)
     ax.grid(True, alpha=0.3)</data>
     </node>
-    <node id="../src\calibration\calibration_plots.py::function::calibration_diagnostics">
+    <node id="../src/calibration/calibration_plots.py::function::calibration_diagnostics">
       <data key="d0">function</data>
       <data key="d1">calibration_diagnostics</data>
-      <data key="d2">../src\calibration\calibration_plots.py</data>
+      <data key="d2">../src/calibration/calibration_plots.py</data>
       <data key="d3">def calibration_diagnostics(y: ArrayLike, raw_probs: ArrayLike, cal_probs: ArrayLike, n_bins: int, bins: int, suptitle: str) -&gt; tuple[Figure, tuple[Axes, Axes, Axes]]</data>
       <data key="d4">Create a calibration diagnostic figure with three subplots:
 
@@ -3858,10 +3858,10 @@ axes : tuple[Axes, Axes, Axes]
 
     return fig, axes_tuple</data>
     </node>
-    <node id="../src\calibration\calibrator.py">
+    <node id="../src/calibration/calibrator.py">
       <data key="d0">file</data>
       <data key="d1">calibrator.py</data>
-      <data key="d2">../src\calibration\calibrator.py</data>
+      <data key="d2">../src/calibration/calibrator.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">from typing import Any, Literal
@@ -3988,10 +3988,10 @@ class Calibrator:
             return np.asarray(calibrated, dtype=float)
 </data>
     </node>
-    <node id="../src\calibration\calibrator.py::class::Calibrator">
+    <node id="../src/calibration/calibrator.py::class::Calibrator">
       <data key="d0">class</data>
       <data key="d1">Calibrator</data>
-      <data key="d2">../src\calibration\calibrator.py</data>
+      <data key="d2">../src/calibration/calibrator.py</data>
       <data key="d3">Calibrator</data>
       <data key="d4">Unified probability calibrator supporting:
 
@@ -4132,10 +4132,10 @@ Notes
             calibrated = self.cal.predict_proba(X)
             return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\calibrator.py::method::Calibrator.__init__">
+    <node id="../src/calibration/calibrator.py::method::Calibrator.__init__">
       <data key="d0">method</data>
       <data key="d1">Calibrator.__init__</data>
-      <data key="d2">../src\calibration\calibrator.py</data>
+      <data key="d2">../src/calibration/calibrator.py</data>
       <data key="d3">def __init__(self, method: Literal['platt', 'isotonic', 'temperature']) -&gt; None</data>
       <data key="d4">None</data>
       <data key="d5">def __init__(self, method: Literal["platt", "isotonic", "temperature"] = "platt") -&gt; None:
@@ -4150,10 +4150,10 @@ Notes
         else:
             raise ValueError("Unknown method: choose 'platt', 'isotonic', or 'temperature'")</data>
     </node>
-    <node id="../src\calibration\calibrator.py::method::Calibrator.fit">
+    <node id="../src/calibration/calibrator.py::method::Calibrator.fit">
       <data key="d0">method</data>
       <data key="d1">Calibrator.fit</data>
-      <data key="d2">../src\calibration\calibrator.py</data>
+      <data key="d2">../src/calibration/calibrator.py</data>
       <data key="d3">def fit(self, X_val: ArrayLike | Any, y_val: ArrayLike) -&gt; None</data>
       <data key="d4">Fit the calibration model.
 
@@ -4206,10 +4206,10 @@ ValueError
             # Pass raw logits to TemperatureScaler
             self.cal.fit(X_val, y_val)</data>
     </node>
-    <node id="../src\calibration\calibrator.py::method::Calibrator.predict_proba">
+    <node id="../src/calibration/calibrator.py::method::Calibrator.predict_proba">
       <data key="d0">method</data>
       <data key="d1">Calibrator.predict_proba</data>
-      <data key="d2">../src\calibration\calibrator.py</data>
+      <data key="d2">../src/calibration/calibrator.py</data>
       <data key="d3">def predict_proba(self, X: ArrayLike | Any) -&gt; NDArray[np.float64]</data>
       <data key="d4">Predict calibrated probabilities.
 
@@ -4263,10 +4263,10 @@ The returned array is always converted to `float64`.</data>
             calibrated = self.cal.predict_proba(X)
             return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\isotonic_regression.py">
+    <node id="../src/calibration/isotonic_regression.py">
       <data key="d0">file</data>
       <data key="d1">isotonic_regression.py</data>
-      <data key="d2">../src\calibration\isotonic_regression.py</data>
+      <data key="d2">../src/calibration/isotonic_regression.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">import numpy as np
@@ -4379,10 +4379,10 @@ class IsotonicCalibrator:
         return np.asarray(calibrated, dtype=float)
 </data>
     </node>
-    <node id="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator">
+    <node id="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator">
       <data key="d0">class</data>
       <data key="d1">IsotonicCalibrator</data>
-      <data key="d2">../src\calibration\isotonic_regression.py</data>
+      <data key="d2">../src/calibration/isotonic_regression.py</data>
       <data key="d3">IsotonicCalibrator</data>
       <data key="d4">Non-parametric monotonic probability calibration via isotonic regression.
 
@@ -4524,10 +4524,10 @@ Notes
         calibrated = self.iso.predict(probs_arr)
         return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.__init__">
+    <node id="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.__init__">
       <data key="d0">method</data>
       <data key="d1">IsotonicCalibrator.__init__</data>
-      <data key="d2">../src\calibration\isotonic_regression.py</data>
+      <data key="d2">../src/calibration/isotonic_regression.py</data>
       <data key="d3">def __init__(self, y_min: float | None, y_max: float | None, increasing: bool, out_of_bounds: str) -&gt; None</data>
       <data key="d4">None</data>
       <data key="d5">def __init__(
@@ -4544,10 +4544,10 @@ Notes
             out_of_bounds=out_of_bounds,
         )</data>
     </node>
-    <node id="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.fit">
+    <node id="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.fit">
       <data key="d0">method</data>
       <data key="d1">IsotonicCalibrator.fit</data>
-      <data key="d2">../src\calibration\isotonic_regression.py</data>
+      <data key="d2">../src/calibration/isotonic_regression.py</data>
       <data key="d3">def fit(self, probs: ArrayLike, y: ArrayLike) -&gt; None</data>
       <data key="d4">Fit the isotonic mapping.
 
@@ -4590,10 +4590,10 @@ ValueError
 
         self.iso.fit(probs_arr, y_arr)</data>
     </node>
-    <node id="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.predict_proba">
+    <node id="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.predict_proba">
       <data key="d0">method</data>
       <data key="d1">IsotonicCalibrator.predict_proba</data>
-      <data key="d2">../src\calibration\isotonic_regression.py</data>
+      <data key="d2">../src/calibration/isotonic_regression.py</data>
       <data key="d3">def predict_proba(self, probs: ArrayLike) -&gt; NDArray[np.float64]</data>
       <data key="d4">Predict calibrated probabilities using the fitted isotonic mapping.
 
@@ -4634,10 +4634,10 @@ ValueError
         calibrated = self.iso.predict(probs_arr)
         return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\platt_scaling.py">
+    <node id="../src/calibration/platt_scaling.py">
       <data key="d0">file</data>
       <data key="d1">platt_scaling.py</data>
-      <data key="d2">../src\calibration\platt_scaling.py</data>
+      <data key="d2">../src/calibration/platt_scaling.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">import numpy as np
@@ -4749,10 +4749,10 @@ class PlattCalibrator:
         return np.asarray(calibrated, dtype=float)
 </data>
     </node>
-    <node id="../src\calibration\platt_scaling.py::class::PlattCalibrator">
+    <node id="../src/calibration/platt_scaling.py::class::PlattCalibrator">
       <data key="d0">class</data>
       <data key="d1">PlattCalibrator</data>
-      <data key="d2">../src\calibration\platt_scaling.py</data>
+      <data key="d2">../src/calibration/platt_scaling.py</data>
       <data key="d3">PlattCalibrator</data>
       <data key="d4">Platt scaling for probabilistic calibration.
 
@@ -4893,10 +4893,10 @@ Notes
         calibrated = self.lr.predict_proba(probs_arr)[:, 1]
         return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\platt_scaling.py::method::PlattCalibrator.__init__">
+    <node id="../src/calibration/platt_scaling.py::method::PlattCalibrator.__init__">
       <data key="d0">method</data>
       <data key="d1">PlattCalibrator.__init__</data>
-      <data key="d2">../src\calibration\platt_scaling.py</data>
+      <data key="d2">../src/calibration/platt_scaling.py</data>
       <data key="d3">def __init__(self, penalty: str, C: float, solver: str, max_iter: int) -&gt; None</data>
       <data key="d4">None</data>
       <data key="d5">def __init__(
@@ -4913,10 +4913,10 @@ Notes
             max_iter=max_iter,
         )</data>
     </node>
-    <node id="../src\calibration\platt_scaling.py::method::PlattCalibrator.fit">
+    <node id="../src/calibration/platt_scaling.py::method::PlattCalibrator.fit">
       <data key="d0">method</data>
       <data key="d1">PlattCalibrator.fit</data>
-      <data key="d2">../src\calibration\platt_scaling.py</data>
+      <data key="d2">../src/calibration/platt_scaling.py</data>
       <data key="d3">def fit(self, probs: ArrayLike, y: ArrayLike) -&gt; None</data>
       <data key="d4">Fit Platt scaling using logistic regression.
 
@@ -4957,10 +4957,10 @@ ValueError
 
         self.lr.fit(probs_arr, y_arr)</data>
     </node>
-    <node id="../src\calibration\platt_scaling.py::method::PlattCalibrator.predict_proba">
+    <node id="../src/calibration/platt_scaling.py::method::PlattCalibrator.predict_proba">
       <data key="d0">method</data>
       <data key="d1">PlattCalibrator.predict_proba</data>
-      <data key="d2">../src\calibration\platt_scaling.py</data>
+      <data key="d2">../src/calibration/platt_scaling.py</data>
       <data key="d3">def predict_proba(self, probs: ArrayLike) -&gt; NDArray[np.float64]</data>
       <data key="d4">Predict calibrated probabilities using the fitted Platt model.
 
@@ -5001,10 +5001,10 @@ automatically by the model's output.</data>
         calibrated = self.lr.predict_proba(probs_arr)[:, 1]
         return np.asarray(calibrated, dtype=float)</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py">
+    <node id="../src/calibration/temperature_scaling.py">
       <data key="d0">file</data>
       <data key="d1">temperature_scaling.py</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">None</data>
       <data key="d4">None</data>
       <data key="d5">import numpy as np
@@ -5157,10 +5157,10 @@ class TemperatureScaler(nn.Module):
         return probs.cpu().numpy().reshape(-1).astype(float)
 </data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::class::TemperatureScaler">
+    <node id="../src/calibration/temperature_scaling.py::class::TemperatureScaler">
       <data key="d0">class</data>
       <data key="d1">TemperatureScaler</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">TemperatureScaler</data>
       <data key="d4">Temperature scaling module for calibrating neural‑network logits.
 
@@ -5336,20 +5336,20 @@ Notes
 
         return probs.cpu().numpy().reshape(-1).astype(float)</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::method::TemperatureScaler.__init__">
+    <node id="../src/calibration/temperature_scaling.py::method::TemperatureScaler.__init__">
       <data key="d0">method</data>
       <data key="d1">TemperatureScaler.__init__</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">def __init__(self, init_temp: float) -&gt; None</data>
       <data key="d4">None</data>
       <data key="d5">def __init__(self, init_temp: float = 1.0) -&gt; None:
         super().__init__()
         self.log_T = nn.Parameter(torch.tensor(float(np.log(init_temp)), dtype=torch.float32))</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::method::TemperatureScaler.temperature">
+    <node id="../src/calibration/temperature_scaling.py::method::TemperatureScaler.temperature">
       <data key="d0">method</data>
       <data key="d1">TemperatureScaler.temperature</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">def temperature(self) -&gt; torch.Tensor</data>
       <data key="d4">Compute the temperature in constrained space.
 
@@ -5368,10 +5368,10 @@ T : torch.Tensor
         """
         return torch.nn.functional.softplus(self.log_T) + 1e-6</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::method::TemperatureScaler.fit">
+    <node id="../src/calibration/temperature_scaling.py::method::TemperatureScaler.fit">
       <data key="d0">method</data>
       <data key="d1">TemperatureScaler.fit</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">def fit(self, logits: torch.Tensor | NDArray[np.float64] | NDArray[np.float32], y: torch.Tensor | NDArray[np.int_] | NDArray[np.float32], max_iter: int) -&gt; None</data>
       <data key="d4">Fit the temperature parameter using binary cross‑entropy.
 
@@ -5442,10 +5442,10 @@ ValueError
 
         optimizer.step(closure)</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::method::TemperatureScaler.closure">
+    <node id="../src/calibration/temperature_scaling.py::method::TemperatureScaler.closure">
       <data key="d0">method</data>
       <data key="d1">TemperatureScaler.closure</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">def closure() -&gt; torch.Tensor</data>
       <data key="d4">None</data>
       <data key="d5">def closure() -&gt; torch.Tensor:
@@ -5455,10 +5455,10 @@ ValueError
             loss.backward()  # type: ignore
             return loss</data>
     </node>
-    <node id="../src\calibration\temperature_scaling.py::method::TemperatureScaler.predict_proba">
+    <node id="../src/calibration/temperature_scaling.py::method::TemperatureScaler.predict_proba">
       <data key="d0">method</data>
       <data key="d1">TemperatureScaler.predict_proba</data>
-      <data key="d2">../src\calibration\temperature_scaling.py</data>
+      <data key="d2">../src/calibration/temperature_scaling.py</data>
       <data key="d3">def predict_proba(self, logits: torch.Tensor | NDArray[np.float64] | NDArray[np.float32]) -&gt; NDArray[np.float64]</data>
       <data key="d4">Predict calibrated probabilities from logits.
 
@@ -5511,190 +5511,193 @@ Notes
 
         return probs.cpu().numpy().reshape(-1).astype(float)</data>
     </node>
-    <edge source="../src\model.py" target="../src\model.py::class::MonotonicLinear">
+    <edge source="../src/model.py" target="../src/model.py::class::MonotonicLinear">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\model.py" target="../src\model.py::class::MonotonicNN">
+    <edge source="../src/model.py" target="../src/model.py::class::MonotonicNN">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicLinear" target="../src\model.py::method::MonotonicLinear.__init__">
+    <edge source="../src/model.py::class::MonotonicLinear" target="../src/model.py::method::MonotonicLinear.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicLinear" target="../src\model.py::method::MonotonicLinear.forward">
+    <edge source="../src/model.py::class::MonotonicLinear" target="../src/model.py::method::MonotonicLinear.forward">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.__init__">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN._init_weights">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN._init_weights">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.forward">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.forward">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.fit">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.fit">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.predict_proba">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.predict_proba">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.predict_logits">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.predict_logits">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN.permutation_importance">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN.permutation_importance">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::class::MonotonicNN" target="../src\model.py::method::MonotonicNN._predict_prob">
+    <edge source="../src/model.py::class::MonotonicNN" target="../src/model.py::method::MonotonicNN._predict_prob">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\model.py::method::MonotonicNN.__init__" target="../src\model.py::class::MonotonicLinear">
+    <edge source="../src/model.py::method::MonotonicNN.__init__" target="../src/model.py::class::MonotonicLinear">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\model.py::method::MonotonicNN.fit" target="../src\schemas.py::class::OptimizerParams">
+    <edge source="../src/model.py::method::MonotonicNN._init_weights" target="../src/model.py::class::MonotonicLinear">
+      <data key="d6">references</data>
+    </edge>
+    <edge source="../src/model.py::method::MonotonicNN.fit" target="../src/schemas.py::class::OptimizerParams">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\schemas.py" target="../src\schemas.py::class::OptimizerParams">
+    <edge source="../src/schemas.py" target="../src/schemas.py::class::OptimizerParams">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::stochastic_baseline">
+    <edge source="../src/utils.py" target="../src/utils.py::function::stochastic_baseline">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::deterministic_baseline">
+    <edge source="../src/utils.py" target="../src/utils.py::function::deterministic_baseline">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::get_best_f1">
+    <edge source="../src/utils.py" target="../src/utils.py::function::get_best_f1">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::calculate_brier_metrics">
+    <edge source="../src/utils.py" target="../src/utils.py::function::calculate_brier_metrics">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::ice_pdp_plot">
+    <edge source="../src/utils.py" target="../src/utils.py::function::ice_pdp_plot">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::is_temperature_scaler">
+    <edge source="../src/utils.py" target="../src/utils.py::function::is_temperature_scaler">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::_to_1d">
+    <edge source="../src/utils.py" target="../src/utils.py::function::_to_1d">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::get_raw_probs">
+    <edge source="../src/utils.py" target="../src/utils.py::function::get_raw_probs">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::_apply_probability_calibrator">
+    <edge source="../src/utils.py" target="../src/utils.py::function::_apply_probability_calibrator">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::get_calibrated">
+    <edge source="../src/utils.py" target="../src/utils.py::function::get_calibrated">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py" target="../src\utils.py::function::plot_feature_importance">
+    <edge source="../src/utils.py" target="../src/utils.py::function::plot_feature_importance">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\utils.py::function::ice_pdp_plot" target="../src\utils.py::function::is_temperature_scaler">
+    <edge source="../src/utils.py::function::ice_pdp_plot" target="../src/utils.py::function::is_temperature_scaler">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::ice_pdp_plot" target="../src\utils.py::function::get_calibrated">
+    <edge source="../src/utils.py::function::ice_pdp_plot" target="../src/utils.py::function::get_calibrated">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::ice_pdp_plot" target="../src\utils.py::function::get_raw_probs">
+    <edge source="../src/utils.py::function::ice_pdp_plot" target="../src/utils.py::function::get_raw_probs">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::get_raw_probs" target="../src\utils.py::function::_to_1d">
+    <edge source="../src/utils.py::function::get_raw_probs" target="../src/utils.py::function::_to_1d">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::_apply_probability_calibrator" target="../src\utils.py::function::_to_1d">
+    <edge source="../src/utils.py::function::_apply_probability_calibrator" target="../src/utils.py::function::_to_1d">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::get_calibrated" target="../src\utils.py::function::get_raw_probs">
+    <edge source="../src/utils.py::function::get_calibrated" target="../src/utils.py::function::get_raw_probs">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::get_calibrated" target="../src\utils.py::function::_to_1d">
+    <edge source="../src/utils.py::function::get_calibrated" target="../src/utils.py::function::_to_1d">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\utils.py::function::get_calibrated" target="../src\utils.py::function::_apply_probability_calibrator">
+    <edge source="../src/utils.py::function::get_calibrated" target="../src/utils.py::function::_apply_probability_calibrator">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py" target="../src\calibration\calibration_plots.py::function::plot_calibration_curves_ax">
+    <edge source="../src/calibration/calibration_plots.py" target="../src/calibration/calibration_plots.py::function::plot_calibration_curves_ax">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py" target="../src\calibration\calibration_plots.py::function::plot_histograms_ax">
+    <edge source="../src/calibration/calibration_plots.py" target="../src/calibration/calibration_plots.py::function::plot_histograms_ax">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py" target="../src\calibration\calibration_plots.py::function::plot_raw_vs_calibrated_ax">
+    <edge source="../src/calibration/calibration_plots.py" target="../src/calibration/calibration_plots.py::function::plot_raw_vs_calibrated_ax">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py" target="../src\calibration\calibration_plots.py::function::calibration_diagnostics">
+    <edge source="../src/calibration/calibration_plots.py" target="../src/calibration/calibration_plots.py::function::calibration_diagnostics">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py::function::calibration_diagnostics" target="../src\calibration\calibration_plots.py::function::plot_calibration_curves_ax">
+    <edge source="../src/calibration/calibration_plots.py::function::calibration_diagnostics" target="../src/calibration/calibration_plots.py::function::plot_calibration_curves_ax">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py::function::calibration_diagnostics" target="../src\calibration\calibration_plots.py::function::plot_histograms_ax">
+    <edge source="../src/calibration/calibration_plots.py::function::calibration_diagnostics" target="../src/calibration/calibration_plots.py::function::plot_histograms_ax">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibration_plots.py::function::calibration_diagnostics" target="../src\calibration\calibration_plots.py::function::plot_raw_vs_calibrated_ax">
+    <edge source="../src/calibration/calibration_plots.py::function::calibration_diagnostics" target="../src/calibration/calibration_plots.py::function::plot_raw_vs_calibrated_ax">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py" target="../src\calibration\calibrator.py::class::Calibrator">
+    <edge source="../src/calibration/calibrator.py" target="../src/calibration/calibrator.py::class::Calibrator">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::class::Calibrator" target="../src\calibration\calibrator.py::method::Calibrator.__init__">
+    <edge source="../src/calibration/calibrator.py::class::Calibrator" target="../src/calibration/calibrator.py::method::Calibrator.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::class::Calibrator" target="../src\calibration\calibrator.py::method::Calibrator.fit">
+    <edge source="../src/calibration/calibrator.py::class::Calibrator" target="../src/calibration/calibrator.py::method::Calibrator.fit">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::class::Calibrator" target="../src\calibration\calibrator.py::method::Calibrator.predict_proba">
+    <edge source="../src/calibration/calibrator.py::class::Calibrator" target="../src/calibration/calibrator.py::method::Calibrator.predict_proba">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::method::Calibrator.__init__" target="../src\calibration\platt_scaling.py::class::PlattCalibrator">
+    <edge source="../src/calibration/calibrator.py::method::Calibrator.__init__" target="../src/calibration/platt_scaling.py::class::PlattCalibrator">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::method::Calibrator.__init__" target="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator">
+    <edge source="../src/calibration/calibrator.py::method::Calibrator.__init__" target="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\calibrator.py::method::Calibrator.__init__" target="../src\calibration\temperature_scaling.py::class::TemperatureScaler">
+    <edge source="../src/calibration/calibrator.py::method::Calibrator.__init__" target="../src/calibration/temperature_scaling.py::class::TemperatureScaler">
       <data key="d6">calls</data>
     </edge>
-    <edge source="../src\calibration\isotonic_regression.py" target="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator">
+    <edge source="../src/calibration/isotonic_regression.py" target="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator" target="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.__init__">
+    <edge source="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator" target="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator" target="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.fit">
+    <edge source="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator" target="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.fit">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\isotonic_regression.py::class::IsotonicCalibrator" target="../src\calibration\isotonic_regression.py::method::IsotonicCalibrator.predict_proba">
+    <edge source="../src/calibration/isotonic_regression.py::class::IsotonicCalibrator" target="../src/calibration/isotonic_regression.py::method::IsotonicCalibrator.predict_proba">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\platt_scaling.py" target="../src\calibration\platt_scaling.py::class::PlattCalibrator">
+    <edge source="../src/calibration/platt_scaling.py" target="../src/calibration/platt_scaling.py::class::PlattCalibrator">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\platt_scaling.py::class::PlattCalibrator" target="../src\calibration\platt_scaling.py::method::PlattCalibrator.__init__">
+    <edge source="../src/calibration/platt_scaling.py::class::PlattCalibrator" target="../src/calibration/platt_scaling.py::method::PlattCalibrator.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\platt_scaling.py::class::PlattCalibrator" target="../src\calibration\platt_scaling.py::method::PlattCalibrator.fit">
+    <edge source="../src/calibration/platt_scaling.py::class::PlattCalibrator" target="../src/calibration/platt_scaling.py::method::PlattCalibrator.fit">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\platt_scaling.py::class::PlattCalibrator" target="../src\calibration\platt_scaling.py::method::PlattCalibrator.predict_proba">
+    <edge source="../src/calibration/platt_scaling.py::class::PlattCalibrator" target="../src/calibration/platt_scaling.py::method::PlattCalibrator.predict_proba">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py" target="../src\calibration\temperature_scaling.py::class::TemperatureScaler">
+    <edge source="../src/calibration/temperature_scaling.py" target="../src/calibration/temperature_scaling.py::class::TemperatureScaler">
       <data key="d6">defines</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py::class::TemperatureScaler" target="../src\calibration\temperature_scaling.py::method::TemperatureScaler.__init__">
+    <edge source="../src/calibration/temperature_scaling.py::class::TemperatureScaler" target="../src/calibration/temperature_scaling.py::method::TemperatureScaler.__init__">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py::class::TemperatureScaler" target="../src\calibration\temperature_scaling.py::method::TemperatureScaler.temperature">
+    <edge source="../src/calibration/temperature_scaling.py::class::TemperatureScaler" target="../src/calibration/temperature_scaling.py::method::TemperatureScaler.temperature">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py::class::TemperatureScaler" target="../src\calibration\temperature_scaling.py::method::TemperatureScaler.fit">
+    <edge source="../src/calibration/temperature_scaling.py::class::TemperatureScaler" target="../src/calibration/temperature_scaling.py::method::TemperatureScaler.fit">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py::class::TemperatureScaler" target="../src\calibration\temperature_scaling.py::method::TemperatureScaler.closure">
+    <edge source="../src/calibration/temperature_scaling.py::class::TemperatureScaler" target="../src/calibration/temperature_scaling.py::method::TemperatureScaler.closure">
       <data key="d6">has_method</data>
     </edge>
-    <edge source="../src\calibration\temperature_scaling.py::class::TemperatureScaler" target="../src\calibration\temperature_scaling.py::method::TemperatureScaler.predict_proba">
+    <edge source="../src/calibration/temperature_scaling.py::class::TemperatureScaler" target="../src/calibration/temperature_scaling.py::method::TemperatureScaler.predict_proba">
       <data key="d6">has_method</data>
     </edge>
   </graph>

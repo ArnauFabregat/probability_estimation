@@ -19,13 +19,13 @@ Fields:
 ## 2. Edges for:
 - "defines" (file → symbol)
 - "has_method" (class → method)
-- "imports" (file → imported module)
 - "calls" (function/method → called symbol)
+- "references" (function/method → referenced symbol)
 
 Fields:
 - src: source node id
 - dst: destination node id
-- rel: "defines" | "has_method" | "imports" | "calls"
+- rel: "defines" | "has_method" | "references" | "calls"
 
 # 🕸️ Visualization
 

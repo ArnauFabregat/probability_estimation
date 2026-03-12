@@ -86,65 +86,98 @@ class CodeGraphBuilder1(ast.NodeVisitor):
 
 class CodeGraphBuilder2(ast.NodeVisitor):
     """
-    Second pass: add "calls" edges between functions/methods based on Call nodes.
-     - This is a simplified heuristic that looks for direct name matches in the graph.
+    Second pass: detect BOTH calls and references using ONLY visit_Name.
+    visit_Call is used only to traverse children.
     """
+
     def __init__(self, file_path, graph):
         self.file_path = file_path
         self.graph = graph
         self.current_file_id = canonical_id(file_path)
         self.current_class = None
         self.current_scope = None
+        self.dst_canonical_id = None  # storage for symbol lookup
 
-    # ---------------------
-    # Classes
-    # ---------------------
-    def visit_ClassDef(self, node):
+    # ---------------------------------------------------------
+    # Parent assignment (must be called before visiting)
+    # ---------------------------------------------------------
+    @staticmethod
+    def attach_parents(node: ast.AST):
+        for child in ast.iter_child_nodes(node):
+            setattr(child, "parent", node)
+            CodeGraphBuilder2.attach_parents(child)
+
+    # ---------------------------------------------------------
+    # Class definitions
+    # ---------------------------------------------------------
+    def visit_ClassDef(self, node: ast.ClassDef):
         class_id = canonical_id(self.file_path, "class", node.name)
-        prev_class = self.current_class
+        prev = self.current_class
         self.current_class = class_id
         self.generic_visit(node)
-        self.current_class = prev_class
+        self.current_class = prev
 
-    # ---------------------
+    # ---------------------------------------------------------
     # Functions / Methods
-    # ---------------------
-    def visit_FunctionDef(self, node):
+    # ---------------------------------------------------------
+    def visit_FunctionDef(self, node: ast.FunctionDef):
         parent_type = "method" if self.current_class else "function"
         name = f"{self.current_class.split('::')[-1]}.{node.name}" if self.current_class else node.name
 
-        fn_id = canonical_id(
-            self.file_path,
-            parent_type,
-            name
-        )
-        prev_scope = self.current_scope
+        fn_id = canonical_id(self.file_path, parent_type, name)
+
+        prev = self.current_scope
         self.current_scope = fn_id
         self.generic_visit(node)
-        self.current_scope = prev_scope
+        self.current_scope = prev
 
-    # ---------------------
-    # Calls
-    # ---------------------
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return self.visit_FunctionDef(node)
+
+    # ---------------------------------------------------------
+    # Symbol lookup (name-based)
+    # ---------------------------------------------------------
     def is_local_symbol(self, name: str) -> bool:
-        # Search in graph for any node whose 'name' attribute matches.
-        # This assumes you stored class/function names as node["name"].
+        """
+        Basic name match against existing graph nodes.
+        """
         for nid, data in self.graph.nodes(data=True):
             if data.get("name") == name:
-                self.dst_canonical_id = nid  # store the canonical ID for later use
+                self.dst_canonical_id = nid
                 return True
         return False
 
-    def visit_Call(self, node):
-        if self.current_scope:
-            target_name = None
+    # ---------------------------------------------------------
+    # Name = call or reference depending on parent
+    # ---------------------------------------------------------
+    def visit_Name(self, node: ast.Name):
+        if not self.current_scope:
+            return
 
-            if isinstance(node.func, ast.Name):
-                target_name = node.func.id
-            elif isinstance(node.func, ast.Attribute):
-                target_name = node.func.attr
+        name = node.id
 
-            if target_name and self.is_local_symbol(target_name):
+        # CASE 1: Name is a CALL (it sits in the callee position)
+        parent = getattr(node, "parent", None)
+        if isinstance(parent, ast.Call) and parent.func is node:
+            if self.is_local_symbol(name):
+                # Add call edge
                 self.graph.add_edge(self.current_scope, self.dst_canonical_id, rel="calls")
+            return
 
-        self.generic_visit(node)
+        # CASE 2: Otherwise, it's a REFERENCE
+        if self.is_local_symbol(name):
+            self.graph.add_edge(self.current_scope, self.dst_canonical_id, rel="references")
+
+    # ---------------------------------------------------------
+    # visit_Call – only traversal; NO call detection here
+    # ---------------------------------------------------------
+    def visit_Call(self, node: ast.Call):
+        # Let Name logic detect call via parent=Call
+        self.visit(node.func)
+
+        # Traverse args normally (names here become references)
+        for arg in node.args:
+            self.visit(arg)
+        for kw in node.keywords:
+            if kw.value:
+                self.visit(kw.value)
