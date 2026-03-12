@@ -29,7 +29,10 @@ Fields:
 
 # 🕸️ Visualization
 
-Upload `ast_graph.graphml` to https://lite.gephi.org/. 
+Upload `ast_graph.graphml` to https://lite.gephi.org/.
+
+- Example for repository https://github.com/ArnauFabregat/probability_estimation
+![Diagram](docs/probability-estimation-repo-graph.png)
 
 # 🧠 Prompt template
 TBD
