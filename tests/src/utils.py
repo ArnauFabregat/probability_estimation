@@ -3,6 +3,82 @@
 import ast
 import textwrap
 
+
+def get_node_context(g, node_id):
+    context: str = ""
+
+    # ---------------------------------------
+    # 1. Node Attributes
+    # ---------------------------------------
+    node_data = g.nodes[node_id]
+
+    context += "### NODE INFO ###\n"
+    context += f"file::type::name -> {node_id}\n\n"
+
+    src = node_data.get("source") or ""
+    context += "source:\n" + src + "\n\n"
+
+    # ---------------------------------------
+    # 2. Outgoing edges
+    # ---------------------------------------
+    out_edges = []
+    for _, dst, data in g.out_edges(node_id, data=True):
+        rel = data.get("rel")
+        out_edges.append(f"{node_id} -[{rel}]-> {dst}")
+
+    if out_edges:
+        context += "### OUTGOING EDGES ###\n"
+        for line in out_edges:
+            context += line + "\n"
+        context += "\n"
+
+    # ---------------------------------------
+    # 3. Incoming edges
+    # ---------------------------------------
+    in_edges = []
+    for src_id, _, data in g.in_edges(node_id, data=True):
+        rel = data.get("rel")
+        in_edges.append(f"{src_id} -[{rel}]-> {node_id}")
+
+    if in_edges:
+        context += "### INCOMING EDGES ###\n"
+        for line in in_edges:
+            context += line + "\n"
+        context += "\n"
+
+    # ---------------------------------------
+    # 4. Neighbor context
+    # ---------------------------------------
+    neighbor_ids = set()
+
+    # nodes referenced by outgoing edges
+    for rel, dst in [(rel, dst) for rel, dst in
+                     [(data.get("rel"), dst) for _, dst, data in g.out_edges(node_id, data=True)]]:
+        neighbor_ids.add(dst)
+
+    # nodes referencing this node
+    for src_id, data_rel in [(src, data.get("rel")) for src, _, data in g.in_edges(node_id, data=True)]:
+        neighbor_ids.add(src_id)
+
+    neighbor_blocks = []
+    for nid in neighbor_ids:
+        nd = g.nodes[nid]
+        if nd.get("type") == "file":
+            continue
+
+        blk = "--- Neighbor Node ---\n"
+        blk += f"file::type::name -> {nid}\n"
+        blk += f"signature: {nd.get('signature')}\n"
+        blk += "docstring:\n" + (nd.get("docstring") or "") + "\n"
+        neighbor_blocks.append(blk)
+
+    if neighbor_blocks:
+        context += "### NEIGHBOR NODE DETAILS ###\n"
+        for blk in neighbor_blocks:
+            context += blk
+
+    return context
+
 # ------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------

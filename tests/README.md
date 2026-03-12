@@ -32,24 +32,9 @@ Fields:
 Upload `ast_graph.graphml` to https://lite.gephi.org/. 
 
 # 🧠 Prompt template
-```
-Here is the target function you will write tests for:
-
-<code of Calibrator.fit>
-
-Here are the related components it depends on:
-- <signature of IsotonicCalibrator.fit>
-- <shape handling code>
-- <error raising code>
-- <signature of TemperatureScaler.fit>
-- <any type constraints>
-
-Generate high-quality unit tests...
-```
+TBD
 
 # TODO
-- Optionally filter `__init__.py` files before graph creation
 - Maybe helps adding usage examples to docstrings
-- Extend prompt with node relevant information
 - Call to LLM with crewai or langchain
 - Run tests, auto-fix erros if not working
