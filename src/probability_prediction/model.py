@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import log_loss
 
-from src.schemas import OptimizerParams
+from probability_prediction.schemas import OptimizerParams
 
 
 class MonotonicLinear(nn.Module):
