@@ -40,5 +40,6 @@ launch.json
 # VScode custom settings
 .vscode/settings.json
 
-# Chainlit
-.files/
+# pytest
+.pytest_cache/
+.coverage
