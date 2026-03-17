@@ -20,6 +20,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+probability_prediction.egg-info/
 
 # ruff
 .ruff_cache/
@@ -43,3 +44,4 @@ launch.json
 # pytest
 .pytest_cache/
 .coverage
+temp_*.py

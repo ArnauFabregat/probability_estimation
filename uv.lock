@@ -2285,7 +2285,7 @@ wheels = [
 [[package]]
 name = "probability-prediction"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "pandas" },
@@ -2315,7 +2315,7 @@ requires-dist = [
     { name = "shap", specifier = ">=0.51.0" },
     { name = "torch", specifier = ">=2.10.0" },
     { name = "tqdm", specifier = ">=4.67.3" },
-    { name = "unit-tests-generator", specifier = ">=0.1.2" },
+    { name = "unit-tests-generator", specifier = ">=0.1.3" },
     { name = "xgboost", specifier = ">=3.2.0" },
 ]
 
@@ -3401,7 +3401,7 @@ wheels = [
 
 [[package]]
 name = "unit-tests-generator"
-version = "0.1.2"
+version = "0.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "crewai", extra = ["google-genai"] },
@@ -3412,9 +3412,9 @@ dependencies = [
     { name = "pytest-cov" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/12/67/b6a560c46e6bcc17afedb5500012e57104b2e4843a830764f02f14d8e670/unit_tests_generator-0.1.2.tar.gz", hash = "sha256:de3902308cfb9be6b14181cc8737ff13e622f1e913b51efc413b9ded31638a7d", size = 19811, upload-time = "2026-03-17T16:26:34.636Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/4a/bcd664a3ef76bdaa11c2317cf8a9b9011f99de3d6625514a69453c32a3f6/unit_tests_generator-0.1.3.tar.gz", hash = "sha256:00265a7747a515b3f2dffa9a7ced68aafa865c86339d94643dd79bfdea251a02", size = 19897, upload-time = "2026-03-17T17:12:41.978Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/1a/4b23dbf6a81fb471dfdbbddfeb2b396542a071c344eed2029aeb4b3d2361/unit_tests_generator-0.1.2-py3-none-any.whl", hash = "sha256:5511d1c213d6c9169ed85a09605d1032818e175caf4574260053a0703dc2bfa4", size = 24036, upload-time = "2026-03-17T16:26:33.116Z" },
+    { url = "https://files.pythonhosted.org/packages/39/2e/022fc4f7e45cff345c06190409a131029f8a3a50c902350f2709ce28fb31/unit_tests_generator-0.1.3-py3-none-any.whl", hash = "sha256:1b3f8f869cc8fa80ab6c316d77df589e21caacd2723e36d94260ca866d7338fd", size = 24086, upload-time = "2026-03-17T17:12:40.867Z" },
 ]
 
 [[package]]

@@ -3,9 +3,9 @@ from typing import Any, Literal
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from src.calibration.isotonic_regression import IsotonicCalibrator
-from src.calibration.platt_scaling import PlattCalibrator
-from src.calibration.temperature_scaling import TemperatureScaler
+from probability_prediction.calibration.isotonic_regression import IsotonicCalibrator
+from probability_prediction.calibration.platt_scaling import PlattCalibrator
+from probability_prediction.calibration.temperature_scaling import TemperatureScaler
 
 
 class Calibrator:
