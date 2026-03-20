@@ -4,7 +4,7 @@ from typing import Any, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import ArrayLike
-from sklearn.metrics import brier_score_loss, f1_score, confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import brier_score_loss, confusion_matrix, f1_score, precision_recall_fscore_support
 
 
 def stochastic_baseline(
@@ -61,9 +61,7 @@ def stochastic_baseline(
 
     # Metrics
     cm = confusion_matrix(y_true, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_true, y_pred, average='binary'
-    )
+    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average="binary")
 
     if verbose:
         print("=== STOCHASTIC BASELINE ===")
@@ -120,9 +118,7 @@ def deterministic_baseline(
 
     # Metrics
     cm = confusion_matrix(y_true, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_true, y_pred, average='binary'
-    )
+    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average="binary")
 
     if verbose:
         print("\n=== DETERMINISTIC BASELINE ===")
@@ -553,12 +549,12 @@ def plot_feature_importance(importances: np.ndarray, feature_names: list[str]) -
     """
 
     importances = np.asarray(importances)
-    feature_names = np.asarray(feature_names)
+    feature_names_arr = np.asarray(feature_names)
 
     # Sort from most important to least
     idx = np.argsort(importances)[::-1]
     sorted_imp = importances[idx]
-    sorted_names = feature_names[idx]
+    sorted_names = feature_names_arr[idx]
 
     plt.figure(figsize=(10, 6))
     _ = plt.barh(sorted_names, sorted_imp, color="steelblue")

@@ -18,7 +18,6 @@ The goal is to provide accurate, interpretable, and business‑consistent probab
 2. [Code Quality & Documentation](#code-quality--documentation)
     - [Pre-commit Hooks](#pre-commit-hooks)
     - [Unit Testing](#unit-testing)
-    - [Peer Review](#peer-review)
 3. [Virtual Environment](#virtual-environment)
     - [Create a new virtualenv with the project's dependencies](#create-a-new-virtualenv-with-the-projects-dependencies)
     - [Checking if the project's virtual environment is active](#checking-if-the-projects-virtual-environment-is-active)
@@ -68,12 +67,6 @@ To run tests with coverage:
 ```bash
 uv run pytest --cov
 ```
-
-### Peer Review
----
-All code contributions are subject to peer review. Detailed review guidelines and standards are documented in the project's peer review guidelines document.
-
-TBD
 
 ## Virtual Environment
 ### Create a new virtualenv with the project's dependencies
