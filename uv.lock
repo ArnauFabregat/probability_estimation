@@ -2315,7 +2315,7 @@ requires-dist = [
     { name = "shap", specifier = ">=0.51.0" },
     { name = "torch", specifier = ">=2.10.0" },
     { name = "tqdm", specifier = ">=4.67.3" },
-    { name = "unit-tests-generator", specifier = ">=0.1.4" },
+    { name = "unit-tests-generator", specifier = ">=0.2.0" },
     { name = "xgboost", specifier = ">=3.2.0" },
 ]
 
@@ -3401,7 +3401,7 @@ wheels = [
 
 [[package]]
 name = "unit-tests-generator"
-version = "0.1.4"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "crewai", extra = ["google-genai"] },
@@ -3412,9 +3412,9 @@ dependencies = [
     { name = "pytest-cov" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/46/0920852db282c53a390f1bcc0d518e17c365eaf9eb9ef37e7917fc1a4636/unit_tests_generator-0.1.4.tar.gz", hash = "sha256:d594981b793a76ed45f899717c3890fffcaa1204461dc55c71287fbdfba37e6b", size = 20308, upload-time = "2026-03-18T07:52:49.446Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/f3/390575f799fcab5c0229de7cc0b540f5cacc585419dba6fc47c3f9f43932/unit_tests_generator-0.2.0.tar.gz", hash = "sha256:36d55d6474f0ee0caceaba48827e7224168414b8acae456d833a125d3068f9ab", size = 20440, upload-time = "2026-03-20T07:54:23.745Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/ef/bb45d59c299b3017fe26bb0cb1d51da4b2a1c340c9d0bf03d616136f265c/unit_tests_generator-0.1.4-py3-none-any.whl", hash = "sha256:662523e5ad0ef12ab776e9a0fcb15b74ec05217f5973620392c31859610be7a8", size = 24371, upload-time = "2026-03-18T07:52:47.891Z" },
+    { url = "https://files.pythonhosted.org/packages/03/11/d0cac7c51f5bd8301a34b046f3392c16fcd874583c9e46ecf6a6e7b13ded/unit_tests_generator-0.2.0-py3-none-any.whl", hash = "sha256:17fb981318890e5e86ae0518f040cb6ba0474338f081d5a152a79eedc69c15c2", size = 24475, upload-time = "2026-03-20T07:54:22.39Z" },
 ]
 
 [[package]]

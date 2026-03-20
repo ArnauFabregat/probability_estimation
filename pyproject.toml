@@ -12,7 +12,7 @@ dependencies = [
     "shap>=0.51.0",
     "torch>=2.10.0",
     "tqdm>=4.67.3",
-    "unit-tests-generator>=0.1.4",
+    "unit-tests-generator>=0.2.0",
     "xgboost>=3.2.0",
 ]
 
